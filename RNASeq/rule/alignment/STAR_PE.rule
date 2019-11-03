@@ -1,0 +1,34 @@
+rule STAR_PE:
+	input:
+		fq1 = FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+		fq2 = FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
+	output:
+            output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
+            output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
+	params:
+		cores = config['STAR']['cores'],
+		index = config['STAR']['index'],
+		outFileNamePrefix = output_dir + "STAR/{sample}."
+
+	shell:
+		"""
+		STAR --runThreadN {params.cores} \
+            --genomeDir {params.index} \
+            --outSAMtype BAM SortedByCoordinate \
+            --outBAMcompression 9 \
+            --limitBAMsortRAM 60000000000 \
+            --readFilesCommand zcat \
+            --quantMode TranscriptomeSAM GeneCounts \
+            --outSJfilterOverhangMin 12 12 12 12 \
+            --alignSJoverhangMin 3 \
+            --alignSJDBoverhangMin 3 \
+            --chimSegmentMin 12 \
+            --chimScoreMin 2 \
+            --chimScoreSeparation 10 \
+            --chimJunctionOverhangMin 12 \
+            --outReadsUnmapped Fastx \
+            --outFilterMultimapNmax 20 \
+            --chimOutType Junctions SeparateSAMold \
+            --readFilesIn {input.fq1} {input.fq2} \
+            --outFileNamePrefix {params.outFileNamePrefix}
+		"""

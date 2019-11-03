@@ -1,0 +1,22 @@
+rule RSEM:
+    input:
+        output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
+    output:
+        output_dir + "RSEM/{sample}.transcript.bam"
+    params:
+		prefix = output_dir + 'RSEM/{label}',
+        cores = config["RSEM"]["cores"],
+        index = config["RSEM"]["index"]
+    shell:
+        """
+        rsem-calculate-expression \
+                        --paired-end \
+                        --alignments \
+                        --calc-pme \
+                        --calc-ci \
+                        --sort-bam-by-coordinate \
+                        -p {params.cores} \
+                        {input} \
+                        {params.index} \
+                        {params.prefix}
+        """
