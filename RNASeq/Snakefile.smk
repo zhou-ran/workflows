@@ -43,6 +43,11 @@ include: "rule/QC/FastQC.rule"
 rule runSTAR:
 	input:
 		expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist())
+# rule runRSEM:
+# 	input:
+# 		expand(output_dir + "RSEM/{sample}.transcript.bam",sample = samples.names.values.tolist())
 
 include: "rule/alignment/STAR_PE.rule"
 include: "rule/QC/MultiQC.rule"
+include: "rule/quant/RSEM.rule"
+include: "rule/quant/GeneCounts.rule"

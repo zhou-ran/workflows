@@ -4,18 +4,21 @@ def multiqc_input(wildcards):
 	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
 	if config["run_RSEM"]:
 		input.extend(expand(output_dir + "RSEM/{sample}.transcript.bam", sample = samples.names.values.tolist()))
+	if config["run_Quant"]:
+		input.extend(["data/quant/quantSce.Rds"])
 	if config["run_STAR"]:
 		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()))
 	return input
 
 ## Determine the input directories for MultiQC depending on the config file
 def multiqc_params(wildcards):
-	param = [output_dir + "FastQC",
-	output_dir + "salmon"]
+	param = [output_dir + "FastQC"]
 	if config["run_trimming"]:
 		param.append(output_dir + "FASTQtrimmed")
 	if config["run_STAR"]:
 		param.append(output_dir + "STAR")
+	if config["run_RSEM"]:
+		param.append(output_dir + "RSEM")
 	return param
 
 

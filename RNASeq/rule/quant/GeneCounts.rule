@@ -1,0 +1,12 @@
+rule calcuCounts:
+	input:
+		expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist())
+	output:
+		"data/quant/quantSce.Rds"
+	params:
+		gtf = config['gtf'],
+		configfile = config["metatxt"]
+	shell:
+		"""
+		/home/zhouran/data/soft/R/R.3.6/bin/Rscript script/GeneCounts.R {params.configfile} {params.gtf} {output}
+		"""
