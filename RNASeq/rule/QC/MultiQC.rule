@@ -7,7 +7,7 @@ def multiqc_input(wildcards):
 	if config["run_Quant"]:
 		input.extend(["data/quant/quantSce.Rds"])
 	if config["run_STAR"]:
-		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()))
+		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist()))
 	return input
 
 ## Determine the input directories for MultiQC depending on the config file
@@ -30,7 +30,7 @@ rule fastqcMultiQC:
 		output_dir + "MultiQC/multiqc_report.html"
 	params:
 		search_dir = multiqc_params,
-		multiout_dir = output_dir + "MultiQC/FastQC/"
+		multiout_dir = output_dir + "MultiQC/"
 	shell:
 		"""
 		multiqc {params.search_dir} -f -o {params.multiout_dir}

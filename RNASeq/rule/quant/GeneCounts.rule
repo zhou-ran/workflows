@@ -1,6 +1,6 @@
 rule calcuCounts:
 	input:
-		expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist())
+		expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist())
 	output:
 		"data/quant/quantSce.Rds"
 	params:
