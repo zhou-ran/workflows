@@ -6,18 +6,19 @@ rule RSEM:
     params:
         prefix = output_dir + 'RSEM/{sample}',
         cores = config["RSEM"]["cores"],
-        index = config["RSEM"]["index"]
+        index = config["RSEM"]["index"],
+        RSEM = config["soft"]["RSEM"]
 
     shell:
         """
-        rsem-calculate-expression \
-                        --paired-end \
-                        --alignments \
-                        --calc-pme \
-                        --calc-ci \
-                        --sort-bam-by-coordinate \
-                        -p {params.cores} \
-                        {input} \
-                        {params.index} \
-                        {params.prefix}
+        {params.RSEM} \
+            --paired-end \
+            --alignments \
+            --calc-pme \
+            --calc-ci \
+            --sort-bam-by-coordinate \
+            -p {params.cores} \
+            {input} \
+            {params.index} \
+            {params.prefix}
         """

@@ -5,8 +5,9 @@ rule calcuCounts:
 		"data/quant/quantSce.Rds"
 	params:
 		gtf = config['gtf'],
-		configfile = config["metatxt"]
+		configfile = config["metatxt"],
+		Rscript = config["soft"]["Rscript"]
 	shell:
 		"""
-		/home/zhouran/data/soft/R/R.3.6/bin/Rscript script/GeneCounts.R {params.configfile} {params.gtf} {output}
+		{params.Rscript} script/GeneCounts.R {params.configfile} {params.gtf} {output}
 		"""

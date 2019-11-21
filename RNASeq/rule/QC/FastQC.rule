@@ -9,10 +9,11 @@ rule fastqc:
 	output:
 		output_dir + "FastQC/{sample}_fastqc.zip"
 	params:
-		FastQC = output_dir + "FastQC"
+		outdir = output_dir + "FastQC",
+		FastQC = config["soft"]["FastQC"]
 	log:
 		output_dir + "logs/fastqc_{sample}.log"
 	shell:
 		"""
-		fastqc -o {params.FastQC} -t {threads} {input.fastq} > {log}
+		{params.FastQC} -o {params.outdir} -t {threads} {input.fastq} > {log}
 		"""
