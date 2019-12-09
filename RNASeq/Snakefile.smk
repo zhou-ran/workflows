@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import pandas as pd
 
@@ -14,6 +15,12 @@ if not os.path.isfile(config["metatxt"]):
 	sys.exit("Metadata file " + config["metatxt"] + " does not exist.")
 
 samples = pd.read_csv(config["metatxt"], sep='\t')
+
+try:
+	_ = samples.Strand
+except AttributeError:
+	print("There was no strand parameter, please add it")
+	sys.exit(0)
 
 ## Sanitize provided input and output directories
 def getpath(str):

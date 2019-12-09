@@ -39,7 +39,7 @@ strand: False
 ## STAR information
 ##---------------------------------------------------------------------------------------------
 STAR:
- index: /mnt/raid61/Personal_data/zhouran/reference/STAR/STAR_index_2.7.1a
+ index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
  cores: 8
 fa: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/fasta/genome.fa
 gtf: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/Mus_musculus.GRCm38.93.gtf
