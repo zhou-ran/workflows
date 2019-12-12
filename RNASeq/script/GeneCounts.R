@@ -38,7 +38,7 @@ sampleList <- read.table(config,
 fileNames <- split(sampleList$names, sampleList$Strand)
 se <- lapply(names(fileNames),function(x){
   
-  name <- fileNames[x]
+  name <- fileNames[[x]]
   bamFile <- paste('./data/STAR/',
                  name,
                  '.Aligned.sortedByCoord.out.bam',
@@ -50,7 +50,7 @@ se <- lapply(names(fileNames),function(x){
 
   se<- summarizeOverlaps(features = ebg, 
                                 reads = bamFile, 
-                                mode = "IntersectionStrict",
+                                mode = "Union",
                                 ignore.strand = FALSE, 
                                 inter.feature = FALSE, 
                                 singleEnd = FALSE,
@@ -61,6 +61,7 @@ se <- lapply(names(fileNames),function(x){
   se
 })
 
+names(se) <- names(fileNames)
 
 saveRDS(se,
         file = output)

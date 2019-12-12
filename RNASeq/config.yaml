@@ -49,7 +49,7 @@ refFlat: /mnt/raid62/Personal_data/lizhidan/genePred_refFlat/Mus_musculus.GRCm38
 ## quant information
 ##---------------------------------------------------------------------------------------------
 RSEM:
- index: /mnt/raid61/Personal_data/zhouran/reference/STAR/RSEM_index/RSEM_index
+ index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/RSEM_index
  cores: 8
 ##---------------------------------------------------------------------------------------------
 
