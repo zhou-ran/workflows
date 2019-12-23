@@ -1,0 +1,51 @@
+def multiqc_input(wildcards):
+	input = []
+	input.extend(expand(output_dir + "FastQC/{sample}.{index}.{lane}." + str(config["fqext1"]) + "_fastqc.zip",zip, \
+		sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist()))
+	input.extend(expand(output_dir + "FastQC/{sample}.{index}.{lane}." + str(config["fqext2"]) + "_fastqc.zip",zip, \
+		sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist()))
+	
+	if config["run_BWA"]:
+		input.extend(expand(output_dir + "BWA/{sample}.{index}.{lane}.bam",zip, \
+		sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist()))
+
+	# if config["run_RSEM"]:
+	# 	input.extend(expand(output_dir + "RSEM/{sample}.transcript.bam", sample = samples.Label.values.tolist()))
+	# if config["run_Quant"]:
+	# 	input.extend(["data/quant/quantSce.Rds"])
+	# if config["run_STAR"]:
+	# 	input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.Label.values.tolist()))
+	# if config["run_RNAmetrics"]:
+	# 	input.extend(expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples.Label.values.tolist()))
+
+	return input
+
+## Determine the input directories for MultiQC depending on the config file
+def multiqc_params(wildcards):
+	param = [output_dir + "FastQC"]
+	if config["run_trimming"]:
+		param.append(output_dir + "FASTQtrimmed")
+	if config["run_BWA"]:
+		param.append(output_dir + "BWA")
+		
+	# if config["run_RSEM"]:
+	# 	param.append(output_dir + "RSEM")
+	# if config["run_RNAmetrics"]:
+	# 	param.append(output_dir + "Metrics")
+	return param
+
+
+
+rule fastqcMultiQC:
+	input:
+		multiqc_input
+	output:
+		output_dir + "MultiQC/multiqc_report.html"
+	params:
+		search_dir = multiqc_params,
+		multiout_dir = output_dir + "MultiQC/",
+		multiqc = config["soft"]["multiqc"]
+	shell:
+		"""
+		{params.multiqc} {params.search_dir} -f -o {params.multiout_dir}
+		"""

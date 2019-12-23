@@ -1,0 +1,19 @@
+## ------------------------------------------------------------------------------------ ##
+## Quality control
+## ------------------------------------------------------------------------------------ ##
+## FastQC, original reads
+
+rule fastqc:
+	input:
+		fastq = FASTQdir + "{sample}.{index}.{lane}." + str(config["fqsuffix"]) + ".gz"
+	output:
+		output_dir + "FastQC/{sample}.{index}.{lane}_fastqc.zip"
+	params:
+		outdir = output_dir + "FastQC",
+		FastQC = config["soft"]["FastQC"]
+	log:
+		output_dir + "logs/fastqc_{sample}.{index}.{lane}.log"
+	shell:
+		"""
+		{params.FastQC} -o {params.outdir} -t {threads} {input.fastq} > {log}
+		"""
