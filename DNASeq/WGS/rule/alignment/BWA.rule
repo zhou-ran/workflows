@@ -1,17 +1,25 @@
+
 rule bwa:
 	input:
 		FASTQdir + "{sample}.{index}.{lane}." +str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
 		FASTQdir + "{sample}.{index}.{lane}." +str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
+	
 	output:
 		output_dir + "BWA/{sample}.{index}.{lane}.bam"
+	
 	params:
 		bwa   = config['soft']['bwa'],
 		cores = config['bwa']['cores'],
 		index = config['bwa']['index'],
-		samtools = config['soft']['samtools']
-		# ID  = config['Label'],
-		# SM  = config[]
+		samtools = config['soft']['samtools'],
+		sample = '{sample}',
+		id = '{sample}.{index}'
+		
 	shell:
 		"""
-		{params.bwa} mem -t params.cores {params.index} {input} | {params.samtools} sort -O bam - -o {output}
+		
+		{params.bwa} mem -R '@RG\\tID:{params.id}\\tSM:{params.sample}\\tPL:Illumina' \
+		-t {params.cores} {params.index} {input} | {params.samtools} sort -O bam - -o {output}
+
 		"""
+

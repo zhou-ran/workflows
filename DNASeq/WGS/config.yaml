@@ -51,7 +51,7 @@ refFlat: /mnt/raid62/Personal_data/lizhidan/genePred_refFlat/Mus_musculus.GRCm38
 ##---------------------------------------------------------------------------------------------
 bwa:
  index: /mnt/raid61/Personal_data/zhouran/reference/WES/hg38_bwa/genome
- cores: 8
+ cores: 12
 ##---------------------------------------------------------------------------------------------
 
 
@@ -73,5 +73,6 @@ soft:
  Rscript: /home/zhouran/data/soft/R/R.3.6/bin/Rscript
  bwa: /home/zhouran/data/anaconda3/bin/bwa
  samtools: /home/zhouran/data/anaconda3/bin/samtools
+ sambamba: /home/zhouran/data/anaconda3/bin/sambamba
 ##---------------------------------------------------------------------------------------------
 
