@@ -39,12 +39,12 @@ strand: False
 
 ## STAR information
 ##---------------------------------------------------------------------------------------------
-STAR:
- index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
- cores: 8
-fa: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/fasta/genome.fa
-gtf: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/Mus_musculus.GRCm38.93.gtf
-refFlat: /mnt/raid62/Personal_data/lizhidan/genePred_refFlat/Mus_musculus.GRCm38.93.refFlat
+# STAR:
+#  index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
+#  cores: 8
+fa: /mnt/raid61/Personal_data/zhouran/reference/WES/hg38_bwa/Homo_sapiens.GRCh38.dna.primary_assembly.fa
+# gtf: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/Mus_musculus.GRCm38.93.gtf
+# refFlat: /mnt/raid62/Personal_data/lizhidan/genePred_refFlat/Mus_musculus.GRCm38.93.refFlat
 ##---------------------------------------------------------------------------------------------
 
 ## BWA information
@@ -62,6 +62,14 @@ RSEM:
  cores: 8
 ##---------------------------------------------------------------------------------------------
 
+##GATK bundle
+##---------------------------------------------------------------------------------------------
+# /mnt/raid61/Personal_data/zhouran/reference/public_set/WES_hg38
+hapmap: /mnt/raid61/Personal_data/zhouran/reference/public_set/WES_hg38_noChr/hapmap_3.3.hg38.vcf.gz
+1000G_omni2.5: /mnt/raid61/Personal_data/zhouran/reference/public_set/WES_hg38_noChr/1000G_omni2.5.hg38.vcf.gz
+1000G_phase1: /mnt/raid61/Personal_data/zhouran/reference/public_set/WES_hg38_noChr/1000G_phase1.snps.high_confidence.hg38.vcf.gz
+dbsnp146: /mnt/raid61/Personal_data/zhouran/reference/public_set/WES_hg38_noChr/dbsnp_146.hg38.vcf.gz
+mills: /mnt/raid61/Personal_data/zhouran/reference/public_set/WES_hg38_noChr/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
 ## soft
 ##---------------------------------------------------------------------------------------------
 soft:
@@ -74,5 +82,6 @@ soft:
  bwa: /home/zhouran/data/anaconda3/bin/bwa
  samtools: /home/zhouran/data/anaconda3/bin/samtools
  sambamba: /home/zhouran/data/anaconda3/bin/sambamba
+ gatk: /home/zhouran/data/soft/GATK/current/gatk
 ##---------------------------------------------------------------------------------------------
 

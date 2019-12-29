@@ -16,7 +16,7 @@ rule mergeBam:
 	shell:
 		"""
 
-		{params.samtools} merge -o {output} {input}
+		{params.samtools} merge {output} {input}
 
 		"""
 

@@ -1,0 +1,37 @@
+rule baserecall:
+    input:
+        bam = output_dir + 'BamProcess/{sample}.markdups.bam'
+    output:
+        table = output_dir + 'BamProcess/BQSR/{label}.table'
+    params:
+        genome = config['fa']
+        site1 = config['1000G_phase1'],
+        site2 = config['mills'],
+        site3 = config['dbsnp146'],
+        gatk = config['soft']['gatk']
+    shell:
+        """
+        {params.gatk} BaseRecalibrator -R {params.genome} \
+        -I {input.bam} \
+        --known-sites {params.site1} \
+        --known-sites {params.site2} \
+        --known-sites {params.site3} \
+        -O {output.table}\
+        """
+
+
+rule applyBQSR:
+    input:
+        table = output_dir + 'BamProcess/BQSR/{label}.table'
+        bam = output_dir + 'BamProcess/{sample}.markdups.bam'
+    output:
+        bam = output_dir + 'BamProcess/{sample}.markdups.BQSR.bam'
+    params:
+        gatk = config['soft']['gatk']
+    shell:
+        """
+        {params.gatk} ApplyBQSR \
+        --bqsr-recal-file {input.table} \
+        -I {input.bam} \
+        -O {output.bam}
+        """

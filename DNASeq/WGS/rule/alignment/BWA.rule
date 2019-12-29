@@ -5,7 +5,7 @@ rule bwa:
 		FASTQdir + "{sample}.{index}.{lane}." +str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
 	
 	output:
-		output_dir + "BWA/{sample}.{index}.{lane}.bam"
+		temp(output_dir + "BWA/{sample}.{index}.{lane}.bam")
 	
 	params:
 		bwa   = config['soft']['bwa'],
