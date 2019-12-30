@@ -1,6 +1,6 @@
 
 
-## WGS (main)
+## WES (not complete)
 
 All pipelien followed the GATK best practice
 
@@ -23,8 +23,8 @@ All config information was in `config` file, yaml format.
 
 ### GATK
 - BQSR
-- VQSR
-- Joint
+- Mutect2
+- Annotation
 
 ### MultiQC
 
