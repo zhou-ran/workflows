@@ -8,7 +8,7 @@ def multiqc_input(wildcards):
 	if config["run_BWA"]:
 		input.extend(expand(output_dir + "BWA/{sample}.{index}.{lane}.bam",zip, \
 		sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist()))
-		input.extend(expand(output_dir + 'BamProcess/{sample}.markdups.bam', sample = samples.Label.values.tolist()))
+		input.extend(expand(output_dir + 'BamProcess/{sample}.markdups.BQSR.bam', sample = samples.Label.values.tolist()))
 
 	# if config["run_RSEM"]:
 	# 	input.extend(expand(output_dir + "RSEM/{sample}.transcript.bam", sample = samples.Label.values.tolist()))

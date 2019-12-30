@@ -2,9 +2,9 @@ rule baserecall:
     input:
         bam = output_dir + 'BamProcess/{sample}.markdups.bam'
     output:
-        table = output_dir + 'BamProcess/BQSR/{label}.table'
+        table = output_dir + 'BamProcess/BQSR/{sample}.table'
     params:
-        genome = config['fa']
+        genome = config['fa'],
         site1 = config['1000G_phase1'],
         site2 = config['mills'],
         site3 = config['dbsnp146'],
@@ -22,7 +22,7 @@ rule baserecall:
 
 rule applyBQSR:
     input:
-        table = output_dir + 'BamProcess/BQSR/{label}.table'
+        table = output_dir + 'BamProcess/BQSR/{sample}.table',
         bam = output_dir + 'BamProcess/{sample}.markdups.bam'
     output:
         bam = output_dir + 'BamProcess/{sample}.markdups.BQSR.bam'

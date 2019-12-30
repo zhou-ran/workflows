@@ -1,24 +1,27 @@
 rule gvcf:
-    input:
-        output_dir + 'BamProcess/{sample}.markdups.BQSR.bam'
-    output:
-        output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz'
-    params:
-        gatk = config['soft']['gatk'],
-        genome = config['fa']
-    shell:
-        "gatk HaplotypeCaller -R {params.genome} \
-        -I {input} -O {output} -ERC GVCF \
-        --java-options \'-DGATK_STACKTRACE_ON_USER_EXCEPTION=true\'"
+	input:
+		output_dir + 'BamProcess/{sample}.markdups.BQSR.bam'
+	output:
+		output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz'
+	params:
+		gatk = config['soft']['gatk'],
+		genome = config['fa']
+	shell:
+		""""
+		gatk HaplotypeCaller -R {params.genome} \
+		-I {input} -O {output} -ERC GVCF \
+		--java-options \'-DGATK_STACKTRACE_ON_USER_EXCEPTION=true\'
+		"""
 
 rule combined:
 	input:
-        expand(output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz',sample=samples.Label.values.tolist())
+		expand(output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz', 
+		sample = samples.Label.values.tolist())
 	output:
-        output_dir + 'callsnp/combined/All.g.vcf.gz'
-    params:
-        gatk = config['soft']['gatk'],
-        genome = config['fa']
+		output_dir + 'callsnp/combined/All.g.vcf.gz'
+	params:
+		gatk = config['soft']['gatk'],
+		genome = config['fa']
 	run:
 		inputs = ' -V '.join(set(input))
 		shell("{params.gatk} CombineGVCFs -R {params.genome} -V {inputs} -O {output}")
@@ -26,14 +29,16 @@ rule combined:
 
 rule GenotypeGVCFs:
 	input:
-        output_dir + 'callsnp/combined/All.g.vcf.gz'
+		output_dir + 'callsnp/combined/All.g.vcf.gz'
 	output:
-        output_dir + 'callsnp/combined/All.vcf.gz'
-    params:
-        gatk = config['soft']['gatk'],
-        genome = config['fa']
+		output_dir + 'callsnp/combined/All.vcf.gz'
+	params:
+		gatk = config['soft']['gatk'],
+		genome = config['fa']
 	shell:
-		"{params.gatk} GenotypeGVCFs -R {params.genome} -V {input} -O {output}"
+		"""
+		{params.gatk} GenotypeGVCFs -R {params.genome} -V {input} -O {output}
+		"""
 
 rule SNP_mod:
 	input:
@@ -43,12 +48,12 @@ rule SNP_mod:
 		tranchefile = output_dir + 'callsnp/combined/All.snps.tranches'
 	params:
 		rscriptfile = output_dir + 'callsnp/combined/All.snps.plots.R',
-        genome = config['fa'],
-        gatk = config['soft']['gatk'],
-        hapmap = config['hapmap'],
-        omni = config['1000G_omni2.5'],
-        G1000 = config['1000G_phase1'],
-        dbsnp = config['dbsnp146']
+		genome = config['fa'],
+		gatk = config['soft']['gatk'],
+		hapmap = config['hapmap'],
+		omni = config['1000G_omni2.5'],
+		G1000 = config['1000G_phase1'],
+		dbsnp = config['dbsnp146']
 	shell:
 		"""
 		{params.gatk} VariantRecalibrator \
@@ -74,8 +79,8 @@ rule SNP_apply:
 	output:
 		output_dir + 'callsnp/combined/snps.All.VQSR.vcf.gz'
 	params:
-        genome = config['fa'],
-        gatk = config['soft']['gatk']
+		genome = config['fa'],
+		gatk = config['soft']['gatk']
 	shell:
 		"""
 		{params.gatk} ApplyVQSR \
@@ -93,11 +98,11 @@ rule indel_mod:
 		recalfile  = output_dir + 'callsnp/combined/snps.All.indel.recal',
 		tranchefile = output_dir + 'callsnp/combined/snps.All.indel.tranches'
 	params:
-		rscriptfile = output_dir + 'callsnp/combined/snps.All.indel.plots.R'
-        genome = config['fa'],
-        gatk = config['soft']['gatk'],
-        mills = config['mills'],
-        dbsnp = config['dbsnp146']
+		rscriptfile = output_dir + 'callsnp/combined/snps.All.indel.plots.R',
+		genome = config['fa'],
+		gatk = config['soft']['gatk'],
+		mills = config['mills'],
+		dbsnp = config['dbsnp146']
 	shell:
 		"""
 		{params.gatk} VariantRecalibrator \
@@ -120,8 +125,8 @@ rule indel_apply:
 	output:
 		output_dir + 'callsnp/snps.All.VQSR.indel.vcf.gz'
 	params:
-        genome = config['fa'],
-        gatk = config['soft']['gatk']
+		genome = config['fa'],
+		gatk = config['soft']['gatk']
 	shell:
 		"""
 		{params.gatk} ApplyVQSR \
