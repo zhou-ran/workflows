@@ -1,0 +1,16 @@
+rule qapa_quant:
+	input:
+		fq1 = FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",\
+		fq2 = FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
+	output:
+		output_dir + "qapa/{sample}/quant.sf"
+	params:
+		index = config["qapa"]["index"],\
+        salmon = config["soft"]["salmon"],\
+        outFileNamePrefix = output_dir + "qapa/{sample}"
+	shell:
+		"""
+        {params.salmon} quant -i {params.index} \
+        -l A -1 {input.fq1} -2 {input.fq2} -o {params.outFileNamePrefix} -p 8
+		"""
+

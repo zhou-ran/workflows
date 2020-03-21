@@ -1,0 +1,161 @@
+def getStrand(wildcards):
+    """
+    convert the rsem-aware strandness information to strandard format
+    """
+    strand_index = {
+        "reverse": "fr-firststrand",
+        "forward": "fr-secondstrand",
+        "unstrand": "fr-unstrand"
+    }
+    strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
+    if samples.PAIRED == "SINGLE":
+        return "single"
+    return strand_index[strand]
+
+rule get_junction_counts:
+    input:
+        rules.STAR_PE.output.bam
+    output:
+        output_dir + "mountainClimber/{sample}.bed"
+    params:
+        get_junc_counts = config["soft"]["mountain_climber"]["get_junction_counts"],
+        strand = getStrand
+    shell:
+        """
+
+        {params.get_junc_counts} -i {input} \
+        -s {params.strand} -o {output}
+
+        """
+rule generate_bedgraph:
+    input:
+        output_dir + "mountainClimber/junc_bed_files/{sample}.bed"
+    output:
+        output_dir + "mountainClimber/junc_bedgrah/{sample}.bedgraph"
+    params:
+        faidx = config["faidx"],
+        bedtools = config["soft"]["bedtools"]
+    shell:
+        """
+        {params.bedtools} genomecov -trackline -bg -split \
+        -ibam {input} -g {params.faidx} > {output}
+        """
+
+rule moutain_climber_tu:
+    input:
+        jx_file = output_dir + "mountainClimber/junc_bed_files/{sample}.bed",
+        bg_file = output_dir + "mountainClimber/junc_bedgrah/{sample}.bedgraph"
+    output:
+        output_dir + "mountainClimber/TU/{sample}_tu.bed"
+    params:
+        mountain_climber_tu = config["soft"]["mountain_climber"]["mountain_climber_tu"],
+        faidx = config["faidx"]
+    shell:
+        """
+        {params.mountain_climber_tu} -b {input.bg_file} \
+        -j {input.jx_file} -s 0 -g {params.faidx} \
+        -o {output}
+        """
+
+rule merge_tus:
+    input:
+        expand(output_dir + "mountainClimber/TU/{sample}_tu.bed", sample = samples.names.values.tolist())
+    output:
+        output_dir + "mountainClimber/tus_merged/tus_merged.gtf",
+        output_dir + "mountainClimber/tus_merged/tus_merged.bed",
+    params:
+        gtf = config["gtf"],
+        output_prefix = output_dir + "mountainClimber/tus_merged/tus_merged",
+        merge_tus = config["soft"]["mountain_climber"]["merge_tus"]
+    shell:
+        """
+        {params.merge_tus} -i {input} -s n \
+        -g {params.gtf} -o {params.output_prefix}
+        """
+
+# rule mountain_climber_rsem:
+#     input:
+#         output_dir + "mountainClimber/tus_merged/tus_merged.gtf"
+#     output:
+#         output_dir + "mountainClimber/rsem_ref/rsem_ref.chrlist"
+#     params:
+#         rsem_prepare = config["soft"]["rsem_prepare"],
+#         genome = config["fa"],
+#         output_prefix = output_dir + "mountainClimber/rsem_ref/rsem_ref"
+#     shell:
+#         """
+#         {params.rsem_prepare} -p 8 \
+#         --gtf {input} --star {params.genome} {params.output_prefix}
+#         """
+
+# rule mountain_climber_star:
+#     input:
+#     output:
+#     shell:
+#         """
+#         STAR --genomeDir ref --outFilterType BySJout \
+#         --outSAMattributes NH HI AS NM MD \
+#         --outFilterMultimapNmax 200 --outFilterMismatchNmax 999 \
+#         --outFilterMismatchNoverLmax 0.04 --alignIntronMin 20 \
+#         --alignIntronMax 1000000 --alignMatesGapMax 1000000 \
+#         --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --sjdbScore 1 \
+#         --runThreadN 8 --genomeLoad NoSharedMemory --outSAMtype BAM Unsorted \
+#         --quantMode TranscriptomeSAM --outSAMheaderHD @HD VN:1.4 SO:unsorted
+#         """"
+
+rule mountain_climber_cp:
+    input:
+        gtf_bed = output_dir + "mountainClimber/tus_merged/tus_merged.bed",
+        jx_file = output_dir + "mountainClimber/junc_bed_files/{sample}.bed",
+        bg_file = output_dir + "mountainClimber/junc_bedgrah/{sample}.bedgraph"
+    output:
+        output_dir + "mountainClimber/mountainClimberCP/{sample}.bed"
+    params:
+        mountain_climber_cp = config["soft"]["mountain_climber"]["mountain_climber_cp"],
+        fa = config["fa"]
+    shell:
+        """
+        {params.mountain_climber_cp} -i {input.bg_file} \
+        -g {input.gtf_bed} \
+        -j {input.jx_file} -o {output} -x {params.fa}
+        """
+# python mountainClimberRU.py -i mountainClimberCP/SRR950078.bed -o mountainClimberRU/SRR950078.bed
+
+rule mountain_climber_ru:
+    input:
+        output_dir + "mountainClimber/mountainClimberCP/{sample}.bed"
+    output:
+        output_dir + "mountainClimber/mountainClimberRU/{sample}.bed"
+    params:
+        mountain_climber_ru = config["soft"]["mountain_climber"]["mountain_climber_ru"],
+        fa = config["fa"]
+    shell:
+        """
+        {params.mountain_climber_ru} -i {input} -o {output}
+        """
+
+# python diff_cluster.py -i ./mountainClimberCP/*bed -c uhr brain uhr brain uhr brain uhr brain uhr brain -n 4 4 4 4 4 4 4 4 4 4 -o diff/diff
+
+rule mountain_climber_diff_cluster:
+    input:
+        expand(output_dir + "mountainClimber/mountainClimberCP/{sample}.bed", sample = samples.names.values.tolist())
+    output:
+        output_dir + "mountainClimber/diff/welldone"
+    params:
+        diff_cluster = config["soft"]["mountain_climber"]["diff_cluster"],
+        condition = " ".join(samples.condition.values.tolist()),
+        output_prefix = output_dir + "mountain_climber/diff/diff"
+    run:
+        from collections import Counter
+        freq_info = Counter(params.condition)
+        freq_lst = []
+        for sub_condition in params.condition:
+            freq_lst.append(str(freq_info[sub_condition]))
+        shell("""
+        {params.diff_cluster} -i {input} \
+        -c {params.condition} -o {params.output_prefix} \
+        -n 
+        """ + " ".join(freq_lst))
+        with open(output, "w") as output_fh:
+            output_fh.write("welldone!")
+

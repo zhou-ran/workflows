@@ -1,0 +1,40 @@
+def multiqc_input(wildcards):
+	input = []
+	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	if config["run_align"]:
+		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",  sample = samples.names.values.tolist()))
+	if config["run_qapa"]:
+		input.extend(expand(output_dir + "qapa/{sample}/quant.sf", sample = samples.names.values.tolist()))
+	if config["run_dapars"]:
+		input.append(output_dir + "dapars/welldown")
+	if config["run_mc"]:
+		input.extend(expand(output_dir + "mountainClimber/mountainClimberRU/{sample}.bed",sample = samples.names.values.tolist()))
+	return input
+
+## Determine the input directories for MultiQC depending on the config file
+def multiqc_params(wildcards):
+	param = [output_dir + "FastQC"]
+	if config["run_align"]:
+		param.append(output_dir + "STAR")
+	if config["run_qapa"]:
+		param.append(output_dir + "qapa")
+	if config["run_dapars"]:
+		param.append(output_dir + "dapars")
+	if config["run_mc"]:
+		param.append(output_dir + "mountainClimber")
+	return param
+
+rule fastqcMultiQC:
+	input:
+		multiqc_input
+	output:
+		output_dir + "MultiQC/multiqc_report.html"
+	params:
+		search_dir = multiqc_params,
+		multiout_dir = output_dir + "MultiQC/",
+		multiqc = config["soft"]["multiqc"]
+	shell:
+		"""
+		{params.multiqc} {params.search_dir} -f -o {params.multiout_dir}
+		"""

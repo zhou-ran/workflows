@@ -1,0 +1,70 @@
+rule dapars_calculate_cov:
+    message:
+        "Convert the bam file into wig file."
+    input:
+        output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
+    output:
+        output_dir + "bigwig/{sample}.wig"
+    params:
+        genomeCov = config["soft"]["genomeCov"]
+    shell:
+        """
+        {params.genomeCov} -bga -ibam {input} > \
+        {output}
+        """
+
+rule dapars_config:
+    message:
+        "Prepare the dapars seq_depth config information from alingment output"
+    input:
+        log_file = expand(output_dir + "STAR/{sample}.Log.final.out", sample = samples.names.values.tolist()),
+        wig_file = expand(output_dir + "bigwig/{sample}.wig", sample = samples.names.values.tolist()),
+    output:
+        seq_depth_file = output_dir + "STAR/seq_depth",
+        run_config = output_dir + "dapars/run_config"
+    params:
+        three_utr_annotated = config["dapars"]["three_utr"],
+        num_threads = config["dapars"]["num_threads"],
+        cov_threshold = config["dapars"]["cov_threshold"],
+        chromsome_id = config["chrom"][samples.species.unique()[0]]
+
+    run:
+        out_lst = []
+
+        for file in input.log_file:
+            with open(file) as file_hd:
+                for line in file_hd.readlines():
+                    line = line.strip()
+                    if line.startswith("Uniquely mapped reads number"):
+                        line = line.split("\t")
+                        out_lst.append("{}\t{}".format(file, line[-1]))
+        with open(output.seq_depth_file, "w") as fileout_hd:
+            fileout_hd.write("\n".join(out_lst))
+        with open(output.run_config, "w") as config_hd:
+            config_line = [
+                "Annotated_3UTR={}".format(params.three_utr_annotated),
+                "Aligned_Wig_files={}".format(",".join(input.wig_file)),
+                "Output_directory={}".format("data/dapars"),
+                "Output_result_file={}".format("chromosome_"),
+                "Coverage_threshold={}".format(params.cov_threshold),
+                "Num_Threads={}".format(params.num_threads),
+                "sequencing_depth_file={}".format(output.seq_depth_file),
+                "chromsome_id={}".format(params.chromsome_id)
+            ]
+            config_hd.write(
+                "\n".join(config_line)
+            )            
+
+rule dapars_run:
+    input:
+        bam_files = expand(output_dir + "bigwig/{sample}.wig", sample = samples.names.values.tolist()),
+        config_file = rules.dapars_config.output.run_config,
+        seq_depth_file = rules.dapars_config.output.seq_depth_file
+    output:
+        output_dir + "dapars/welldown"
+    params:
+        dapars = config["soft"]["dapars"]
+    shell:
+        """
+        bin/Dapars2_Multi_Sample.py {input.config_file} {output}
+        """
