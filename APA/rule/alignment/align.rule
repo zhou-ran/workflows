@@ -3,14 +3,14 @@ rule STAR_PE:
 		fq1 = FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
 		fq2 = FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
 	output:
-			bam = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
-			trans_bam = output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam",
-            log_file = output_dir + "STAR/{sample}.Log.final.out"
+		bam = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
+		trans_bam = output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam",
+		log_file = output_dir + "STAR/{sample}.Log.final.out"
 	params:
-		cores = config['STAR']['cores'],
-		index = config['STAR']['index'],
+		cores = config["STAR"]["cores"],
+		index = config["STAR"]["index"],
 		outFileNamePrefix = output_dir + "STAR/{sample}.",
-			STAR = config['soft']['STAR']
+		STAR = config["soft"]["STAR"]
 
 	shell:
 		"""
@@ -36,9 +36,9 @@ rule STAR_PE:
 		"""
 rule STAR_INDEX:
 		input:
-			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
+			rules.STAR_PE.output.bam
 		output:
-			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
+			bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
 		shell:
 			"""
 			samtools index {input}

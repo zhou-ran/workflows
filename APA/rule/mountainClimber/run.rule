@@ -8,15 +8,15 @@ def getStrand(wildcards):
         "unstrand": "fr-unstrand"
     }
     strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
-    if samples.PAIRED == "SINGLE":
+    if strand == "SINGLE":
         return "single"
     return strand_index[strand]
 
 rule get_junction_counts:
     input:
-        rules.STAR_PE.output.bam
+        output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
     output:
-        output_dir + "mountainClimber/{sample}.bed"
+        output_dir + "mountainClimber/junc_bed_files/{sample}.bed"
     params:
         get_junc_counts = config["soft"]["mountain_climber"]["get_junction_counts"],
         strand = getStrand
