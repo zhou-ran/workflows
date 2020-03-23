@@ -102,3 +102,4 @@ ENV/
 
 # snakefile
 .snakemake/
+.DS_Store/

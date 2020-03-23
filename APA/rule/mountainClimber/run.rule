@@ -29,7 +29,7 @@ rule get_junction_counts:
         """
 rule generate_bedgraph:
     input:
-        output_dir + "mountainClimber/junc_bed_files/{sample}.bed"
+        output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
     output:
         output_dir + "mountainClimber/junc_bedgrah/{sample}.bedgraph"
     params:
@@ -133,8 +133,6 @@ rule mountain_climber_ru:
         """
         {params.mountain_climber_ru} -i {input} -o {output}
         """
-
-# python diff_cluster.py -i ./mountainClimberCP/*bed -c uhr brain uhr brain uhr brain uhr brain uhr brain -n 4 4 4 4 4 4 4 4 4 4 -o diff/diff
 
 rule mountain_climber_diff_cluster:
     input:
