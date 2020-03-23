@@ -54,6 +54,7 @@ refFlat: /mnt/raid62/Personal_data/lizhidan/genePred_refFlat/Mus_musculus.GRCm38
 ##---------------------------------------------------------------------------------------------
 qapa:
  index: /home/zhouran/data/proj/2020-APA_bulk/ref/QAPA/utr_library
+ db: /mnt/data8/zhouran/proj/2020-APA_bulk/ref/QAPA/ensembl_identifiers.txt
 ##---------------------------------------------------------------------------------------------
 
 ## dapars information

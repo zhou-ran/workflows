@@ -6,11 +6,23 @@ rule qapa_quant:
 		output_dir + "qapa/{sample}/quant.sf"
 	params:
 		index = config["qapa"]["index"],\
-        salmon = config["soft"]["salmon"],\
-        outFileNamePrefix = output_dir + "qapa/{sample}"
+		salmon = config["soft"]["salmon"],\
+		outFileNamePrefix = output_dir + "qapa/{sample}"
 	shell:
 		"""
-        {params.salmon} quant -i {params.index} \
-        -l A -1 {input.fq1} -2 {input.fq2} -o {params.outFileNamePrefix} -p 8
+		{params.salmon} quant -i {params.index} \
+		-l A -1 {input.fq1} -2 {input.fq2} -o {params.outFileNamePrefix} -p 8
 		"""
 
+rule qapa_merge:
+	input:
+		expand(output_dir + "qapa/{sample}/quant.sf", sample = samples.names.values.tolist())
+	output:
+		output_dir + "qapa/qapa_result.txt"
+	params:
+		db = config["qapa"]["db"]
+	shell:
+		"""
+		qapa quant --db {params.db} \
+		{input} >  {output}
+		"""

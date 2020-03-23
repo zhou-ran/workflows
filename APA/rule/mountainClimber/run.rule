@@ -134,6 +134,8 @@ rule mountain_climber_ru:
         {params.mountain_climber_ru} -i {input} -o {output}
         """
 
+# python diff_cluster.py -i ./mountainClimberCP/*bed -c uhr brain uhr brain uhr brain uhr brain uhr brain -n 4 4 4 4 4 4 4 4 4 4 -o diff/diff
+
 rule mountain_climber_diff_cluster:
     input:
         expand(output_dir + "mountainClimber/mountainClimberCP/{sample}.bed", sample = samples.names.values.tolist())
