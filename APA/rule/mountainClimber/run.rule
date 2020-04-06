@@ -1,4 +1,4 @@
-def getStrand(wildcards):
+def get_strand_jxn(wildcards):
     """
     convert the rsem-aware strandness information to strandard format
     """
@@ -12,6 +12,35 @@ def getStrand(wildcards):
         return "single"
     return strand_index[strand]
 
+def get_strand_tu(wildcards):
+    """
+    convert the rsem-aware strandness information to strandard format
+    """
+    strand_index = {
+        "reverse": "y",
+        "forward": "y",
+        "unstrand": "n"
+    }
+    strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
+    if strand == "SINGLE":
+        return "y"
+    return strand_index[strand]
+
+def get_strand_merge_tu(wildcards):
+    """
+    convert the rsem-aware strandness information to strandard format
+    """
+    strand_index = {
+        "reverse": "y",
+        "forward": "y",
+        "unstrand": "n"
+    }
+    strand = samples.Strand.values.tolist()[0]
+    if strand == "SINGLE":
+        return "y"
+    return strand_index[strand]
+
+
 rule get_junction_counts:
     input:
         output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
@@ -19,7 +48,7 @@ rule get_junction_counts:
         output_dir + "mountainClimber/junc_bed_files/{sample}.bed"
     params:
         get_junc_counts = config["soft"]["mountain_climber"]["get_junction_counts"],
-        strand = getStrand
+        strand = get_strand_jxn
     shell:
         """
 
@@ -38,7 +67,7 @@ rule generate_bedgraph:
     shell:
         """
         {params.bedtools} genomecov -trackline -bg -split \
-        -ibam {input} -g {params.faidx} > {output}
+        -ibam {input} -g {params.faidx} | sed 1d |{params.bedtools} sort -i /dev/stdin > {output}
         """
 
 rule moutain_climber_tu:
@@ -49,14 +78,47 @@ rule moutain_climber_tu:
         output_dir + "mountainClimber/TU/{sample}_tu.bed"
     params:
         mountain_climber_tu = config["soft"]["mountain_climber"]["mountain_climber_tu"],
-        faidx = config["faidx"]
-    shell:
-        """
-        {params.mountain_climber_tu} -b {input.bg_file} \
-        -j {input.jx_file} -s 0 -g {params.faidx} \
-        -o {output}
-        """
+        faidx = config["faidx"],
+        strand = get_strand_tu
+    run:
+        if params.strand == "y":
+            # pos results
+            shell(
+                """
+                {params.mountain_climber_tu} -b {input.bg_file} \
+                -j {input.jx_file} -s 1 -g {params.faidx} \
+                -o {output}.pos
+                """
+            )
+            # neg results
+            shell(
+                """
+                {params.mountain_climber_tu} -b {input.bg_file} \
+                -j {input.jx_file} -s -1 -g {params.faidx} \
+                -o {output}.neg
+                """
+            )
 
+            shell(
+                """
+                cat {output}.pos {output}.neg |sort -k1,1 -k2,2n > {output}
+                """
+            )
+            shell(
+                """
+                rm {output}.pos {output}.neg -rf
+                """
+            )
+        else:
+            shell(
+                """
+                {params.mountain_climber_tu} -b {input.bg_file} \
+                -j {input.jx_file} -s 0 -g {params.faidx} \
+                -o {output}
+                """
+            )
+
+            
 rule merge_tus:
     input:
         expand(output_dir + "mountainClimber/TU/{sample}_tu.bed", sample = samples.names.values.tolist())
@@ -66,42 +128,13 @@ rule merge_tus:
     params:
         gtf = config["gtf"],
         output_prefix = output_dir + "mountainClimber/tus_merged/tus_merged",
-        merge_tus = config["soft"]["mountain_climber"]["merge_tus"]
+        merge_tus = config["soft"]["mountain_climber"]["merge_tus"],
+        strand = get_strand_merge_tu
     shell:
         """
-        {params.merge_tus} -i {input} -s n \
+        {params.merge_tus} -i {input} -s {params.strand} \
         -g {params.gtf} -o {params.output_prefix}
         """
-
-# rule mountain_climber_rsem:
-#     input:
-#         output_dir + "mountainClimber/tus_merged/tus_merged.gtf"
-#     output:
-#         output_dir + "mountainClimber/rsem_ref/rsem_ref.chrlist"
-#     params:
-#         rsem_prepare = config["soft"]["rsem_prepare"],
-#         genome = config["fa"],
-#         output_prefix = output_dir + "mountainClimber/rsem_ref/rsem_ref"
-#     shell:
-#         """
-#         {params.rsem_prepare} -p 8 \
-#         --gtf {input} --star {params.genome} {params.output_prefix}
-#         """
-
-# rule mountain_climber_star:
-#     input:
-#     output:
-#     shell:
-#         """
-#         STAR --genomeDir ref --outFilterType BySJout \
-#         --outSAMattributes NH HI AS NM MD \
-#         --outFilterMultimapNmax 200 --outFilterMismatchNmax 999 \
-#         --outFilterMismatchNoverLmax 0.04 --alignIntronMin 20 \
-#         --alignIntronMax 1000000 --alignMatesGapMax 1000000 \
-#         --alignSJoverhangMin 8 --alignSJDBoverhangMin 1 --sjdbScore 1 \
-#         --runThreadN 8 --genomeLoad NoSharedMemory --outSAMtype BAM Unsorted \
-#         --quantMode TranscriptomeSAM --outSAMheaderHD @HD VN:1.4 SO:unsorted
-#         """"
 
 rule mountain_climber_cp:
     input:
@@ -140,22 +173,22 @@ rule mountain_climber_diff_cluster:
     input:
         expand(output_dir + "mountainClimber/mountainClimberCP/{sample}.bed", sample = samples.names.values.tolist())
     output:
-        output_dir + "mountainClimber/diff/welldone"
+        output_dir + "mountainClimber/diff/diff_cluster_totals.txt"
     params:
         diff_cluster = config["soft"]["mountain_climber"]["diff_cluster"],
+        condition_lst = samples.condition.values.tolist(),
         condition = " ".join(samples.condition.values.tolist()),
-        output_prefix = output_dir + "mountain_climber/diff/diff"
+        output_prefix = output_dir + "mountainClimber/diff/diff"
     run:
         from collections import Counter
-        freq_info = Counter(params.condition)
+        freq_info = Counter(params.condition_lst)
         freq_lst = []
-        for sub_condition in params.condition:
+        for sub_condition in params.condition_lst:
+            print(sub_condition)
             freq_lst.append(str(freq_info[sub_condition]))
+        print(freq_lst)
         shell("""
         {params.diff_cluster} -i {input} \
         -c {params.condition} -o {params.output_prefix} \
-        -n 
-        """ + " ".join(freq_lst))
-        with open(output, "w") as output_fh:
-            output_fh.write("welldone!")
+        -n """ + " ".join(freq_lst))
 
