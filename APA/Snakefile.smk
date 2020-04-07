@@ -43,6 +43,7 @@ rule all:
 		output_dir + "MultiQC/multiqc_report.html"
 rule runfastqc:
 	input:
+		expand(output_dir + "FastQC/{sample}" + "_fastqc.zip", sample = samples.names[samples.type == "SE"].values.tolist()),
 		expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == "PE"].values.tolist()),
 		expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == "PE"].values.tolist()),
 

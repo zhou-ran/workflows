@@ -1,15 +1,27 @@
-rule STAR_PE:
+def star_func(wildcards):
+	# fetch the library type from the meta information 
+	lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+	if lib_type == "SE":
+		return([FASTQdir + "{sample}." + str(config["fqsuffix"]) + ".gz"])
+
+	if lib_type == "PE":
+		return([FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+				FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"])
+	
+	raise(ValueError("Unrecognized library type value: %s" % wildcards.sample))
+
+rule STAR:
 	input:
-		fq1 = FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
-		fq2 = FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
+		fqs = star_func
 	output:
-			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
-			output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
+		bam = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
+		trans_bam = output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam",
+		log_file = output_dir + "STAR/{sample}.Log.final.out"
 	params:
-		cores = config['STAR']['cores'],
-		index = config['STAR']['index'],
+		cores = config["STAR"]["cores"],
+		index = config["STAR"]["index"],
 		outFileNamePrefix = output_dir + "STAR/{sample}.",
-			STAR = config['soft']['STAR']
+		STAR = config["soft"]["STAR"]
 
 	shell:
 		"""
@@ -30,14 +42,14 @@ rule STAR_PE:
 			--outReadsUnmapped Fastx \
 			--outFilterMultimapNmax 20 \
 			--chimOutType Junctions SeparateSAMold \
-			--readFilesIn {input.fq1} {input.fq2} \
+			--readFilesIn {input.fqs} \
 			--outFileNamePrefix {params.outFileNamePrefix}
 		"""
 rule STAR_INDEX:
 		input:
-			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
+			rules.STAR.output.bam
 		output:
-			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
+			bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
 		shell:
 			"""
 			samtools index {input}

@@ -15,8 +15,9 @@ Include:
 ### Trim (optional)
 
 Inlucde:
- - fastp (TODO)
- - Trimmomatic (TODO)
+
+ - fastp
+ - Trimmomatic
 
 ### STAR
 
