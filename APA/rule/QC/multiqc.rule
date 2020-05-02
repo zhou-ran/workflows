@@ -1,9 +1,9 @@
 def multiqc_input(wildcards):
 	input = []
-	input.extend(expand(output_dir + "FastQC/{sample}" + "_fastqc.zip", sample = samples.names[samples.type == 'SE'].values.tolist()),)
-	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
-	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
 	if config["run_align"]:
+		input.extend(expand(output_dir + "FastQC/{sample}" + "_fastqc.zip", sample = samples.names[samples.type == 'SE'].values.tolist()),)
+		input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+		input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
 		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",  sample = samples.names.values.tolist()))
 	if config["run_qapa"]:
 		input.extend(expand(output_dir + "qapa/{sample}/quant.sf", sample = samples.names.values.tolist()))
