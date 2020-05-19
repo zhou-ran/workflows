@@ -8,7 +8,7 @@ def multiqc_input(wildcards):
 	if config["run_qapa"]:
 		input.extend(expand(output_dir + "qapa/{sample}/quant.sf", sample = samples.names.values.tolist()))
 	if config["run_dapars"]:
-		input.append(output_dir + "dapars/welldown")
+		input.append(output_dir + "dapars/welldone")
 	if config["run_mc"]:
 		input.extend(expand(output_dir + "mountainClimber/mountainClimberRU/{sample}.bed",sample = samples.names.values.tolist()))
 	return input

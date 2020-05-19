@@ -61,7 +61,7 @@ rule dapars_run:
         config_file = rules.dapars_config.output.run_config,
         seq_depth_file = rules.dapars_config.output.seq_depth_file
     output:
-        output_dir + "dapars/welldown"
+        output_dir + "dapars/welldone"
     params:
         dapars = config["soft"]["dapars"]
     shell:
