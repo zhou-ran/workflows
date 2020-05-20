@@ -1,0 +1,203 @@
+import pandas as pd
+rule pileup:
+    input:
+        bam = output_dir + 'BQSR/{sample}.markdups.BQSR.bam'
+    output:
+        output_dir + 'mutect2/pileup/{sample}.pileup.table'
+    params:
+        gatk = config['soft']['gatk'],
+        genome = config['fa'],
+        interval_list = config['wes_config']['Preprocessed_interval'],
+        aof = config['aof']
+
+    shell:
+        '''
+        {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" GetPileupSummaries \
+        -R {params.genome} \
+        -I {input} \
+        -L {params.interval_list} \
+        -V {params.aof} \
+        -O $tumor_name.pileups.table
+        '''
+
+rule PoN_build:
+    input:
+        bam = output_dir + 'BQSR/{sample_normal}.markdups.BQSR.bam'
+    output:
+        vcf = output_dir + 'mutect2/PoN/{sample_normal}.vcf.gz'
+    params:
+        gatk = config['soft']['gatk'],
+        genome = config['fa'],
+        interval_list = config['wes_config']['Preprocessed_interval']
+
+    shell:
+        '''
+        {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" Mutect2 \
+        -R {params.genome} \
+        -I {input.bam} \
+        -tumor {wildcards.sample_normal} \
+        --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \
+        -L {params.interval_list} \
+        -O {output.vcf}
+        '''
+
+rule PoN_create:
+    input:
+        expand(output_dir + 'mutect2/PoN/{sample_normal}.vcf.gz', 
+        sample_normal = samples.Label[samples.Type=="N"].values.tolist())
+    output:
+        pon_vcf = output_dir + 'mutect2/PoN/PoN.vcf.gz'
+    params:
+        gatk = config['soft']['gatk'],
+        genome = config['fa']
+
+    run:
+        label_out = ' -vcfs '.join({})
+        shell('''
+        {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" mutect2 CreateSomaticPanelOfNormals \
+        -vcfs {label_out} -O {output.pon_vcf} 
+        ''')
+
+
+rule pair_com:
+    input:
+        ca = output_dir + 'BQSR/{tumor_label}.markdups.BQSR.bam',
+        normal = lambda wildcards: output_dir + 'BQSR/{}.markdups.BQSR.bam'.format(pair_com_dic[wildcards.tumor_label])
+    output:
+        vcf = output_dir + 'mutect2/rawvcf/{tumor_label}.vcf.gz',
+        bam = output_dir + 'mutect2/mutect2_bam/{tumor_label}.mutect2.bam',
+    params:
+        gatk = config['soft']['gatk'],
+        genome = config['fa'],
+        interval_list = config['wes_config']['Preprocessed_interval'],
+        aof = config['aof'],
+        normal_label = lambda wildcards: pair_com_dic[wildcards.tumor_label]
+
+    run:
+        if input.normal == input.ca:
+            func = '''
+                {params.gatk} --java-options "-Xmx80G -Djava.io.tmpdir=./" Mutect2 \
+                -R {params.genome} \
+                -I {input.ca} \
+                -tumor {wildcards.tumor_label} \
+                --germline-resource {params.aof} \
+                --af-of-alleles-not-in-resource 0.0000025 \
+                -L {params.interval_list} \
+                -O {output.vcf} \
+                --bam-output {output.bam}
+                '''
+            print(func)
+            shell(func)
+        else:
+            func = '''
+                {params.gatk} --java-options "-Xmx80G -Djava.io.tmpdir=./" Mutect2 \
+                -R {params.genome} \
+                -I {input.ca} \
+                -tumor {wildcards.tumor_label} \
+                -I {input.normal} \
+                -normal {params.normal_label} \
+                --germline-resource {params.aof} \
+                --af-of-alleles-not-in-resource 0.0000025 \
+                -L {params.interval_list} \
+                -O {output.vcf} \
+                --bam-output {output.bam}
+                '''
+            print(func)
+            shell(func)
+
+
+
+rule CalculateContamination:
+    input:
+        ca = output_dir + 'mutect2/pileup/{normal_use_label}.pileup.table',
+        normal = lambda wildcards: output_dir + 'mutect2/pileup/{}.pileup.table'.format(pair_com_dic[wildcards.normal_use_label])
+
+    output:
+        contamination = output_dir + 'mutect2/contamination/{normal_use_label}.contamination.table',
+        segment = output_dir + 'mutect2/contamination/{normal_use_label}.segments.table'
+    params:
+        gatk = config['soft']['gatk'],
+        genome = config['fa']
+
+    shell:
+        '''
+        {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" CalculateContamination \
+
+        -I {input.ca} \
+        -matched {input.normal} \
+
+        -O {output.contamination}  \
+        --tumor-segmentation {output.segment}
+
+        '''
+rule filter_vcf:
+    input:
+        contamination = output_dir + 'mutect2/contamination/{normal_use_label}.contamination.table',
+        segment = output_dir + 'mutect2/contamination/{normal_use_label}.segments.table',
+        vcf = output_dir + 'mutect2/rawvcf/{normal_use_label}.vcf.gz'
+
+    output:
+        output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz'
+    params:
+        gatk = config['soft']['gatk'],
+        genome = config['fa'],
+
+    shell:
+        '''
+        {params.gatk} --java-options "-Xmx80G -Djava.io.tmpdir=./" FilterMutectCalls \
+        -V {input.vcf} \
+        -R {params.genome} \
+        -O {output} \
+        --contamination-table {input.contamination}
+        '''
+
+rule mutect2_done:
+    input:
+        expand(output_dir + 'mutect2/rawvcf/{tumor_label}.vcf.gz', \
+            tumor_label = samples.Label[samples.Type != 'N']),
+        expand(output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz', \
+            normal_use_label = normal_use
+            )
+    output:
+        output_dir + 'mutect2/vcf/welldone'
+    shell:
+        '''
+        touch {output}
+        '''
+
+
+rule CNV_kit:
+    input:
+        ca = output_dir + 'BQSR/{normal_use_label}.markdups.BQSR.bam',
+        normal = lambda wildcards: output_dir + 'BQSR/{}.markdups.BQSR.bam'.format(pair_com_dic[wildcards.normal_use_label])
+    output:
+        output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.targetcoverage.cnn'
+
+    params:
+        cap_region= config['wes_config']['INTERVAL'],
+        genome = config['fa'],
+        access_five = config['wes_config']['access_five'],
+        reference = output_dir +  'CNV/coverage/{normal_use_label}/reference.cnn',
+        outdir = output_dir
+    shell:
+        """
+        cnvkit.py batch {input.ca} \
+        --normal {input.normal} \
+        --targets {params.cap_region} \
+        --fasta {params.genome} \
+        --access {params.access_five} \
+        --target-avg-size 100 \
+        --output-reference {params.reference} --output-dir {params.outdir} \
+        --diagram   --scatter  -p 2 
+        """
+
+rule cnv_done:
+    input:
+        # expand(output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz', normal_use_label = normal_use),
+        expand(output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.targetcoverage.cnn', normal_use_label = normal_use)
+    output:
+        output_dir + 'mutect2/coverage/welldone'
+    shell:
+        '''
+        touch {output}
+        '''

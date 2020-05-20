@@ -27,12 +27,26 @@ def getpath(str):
 		str += '/'
 	return str
 
+
+pair_com_dic = {}
+normal_use = []
+for _, df in samples.groupby(['Patient']):
+    for i in df.Label[df.Type!='N']:
+        normal_label = df.Label[df.Type=='N']
+        if normal_label.empty:
+            pair_com_dic[i] = i
+        else:
+            pair_com_dic[i] = normal_label.values.tolist()[0]
+            normal_use.append(i)
+
+
 output_dir = getpath(config["output"])
 FASTQdir = getpath(config["FASTQ"])
 
 rule all:
 	input:
-		output_dir + "MultiQC/multiqc_report.html"
+		output_dir + "MultiQC/multiqc_report.html",
+		output_dir + "mutect2/PoN/PoN.vcf.gz"
 
 
 include: "rule/QC/FastQC.rule"
@@ -41,3 +55,4 @@ include: "rule/Alignment/BWA.rule"
 include: "rule/BamProc/MergeAndMark.rule"
 include: "rule/BamProc/BQSR.rule"
 include: "rule/BamProc/VQSR.rule"
+include: "rule/Mutect2/mutect.rule"
