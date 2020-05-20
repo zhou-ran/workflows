@@ -1,0 +1,36 @@
+def mergeInput(wildcards):
+	index = samples.Index[samples.Label == wildcards.sample].values.tolist()
+	lane  = samples.Lane[samples.Label == wildcards.sample].values.tolist()
+	return expand(output_dir + "BWA/{{sample}}.{index}.{lane}.bam",zip,\
+		index = index,\
+		lane = lane)
+
+
+rule mergeBam:
+	input:
+		mergeInput
+	output:
+		temp(output_dir + "bam_tmp/{sample}.bam")
+	params:
+		samtools = config['soft']['samtools']
+	shell:
+		"""
+
+		{params.samtools} merge {output} {input}
+
+		"""
+
+rule markDup:
+	input:
+		bam = output_dir + 'bam_tmp/{sample}.bam'
+	output:
+		bam = output_dir + 'BamProcess/{sample}.markdups.bam'
+	log:
+		out = 'log/markDup/{sample}_run_sambamba.log',
+		err = 'log/markDup/{sample}_run_sambamba.err'
+	params:
+		sambamba = config['soft']['sambamba']
+	shell:
+		"""
+		{params.sambamba} markdup -t 4 -p --tmpdir=./tmp {input.bam} {output.bam} 2> {log.err} 1> {log.out}
+		"""

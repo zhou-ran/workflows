@@ -1,0 +1,207 @@
+rule gvcf:
+	input:
+		bam = output_dir + 'BQSR/{sample}.markdups.BQSR.bam'
+	output:
+		vcf = output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz'
+	params:
+		gatk = config['soft']['gatk'],
+		genome = config['fa']
+	shell:
+		"""
+		gatk HaplotypeCaller -R {params.genome} \
+		-I {input} -O {output} -ERC GVCF \
+		--java-options \'-DGATK_STACKTRACE_ON_USER_EXCEPTION=true\'
+		"""
+
+rule combined:
+	input:
+		expand(output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz', sample = samples.Label.values.tolist())
+	output:
+		output_dir + 'callsnp/combined/All.g.vcf.gz'
+	params:
+		gatk = config['soft']['gatk'],
+		genome = config['fa']
+	run:
+		inputs = ' -V '.join(set(input))
+		shell("{params.gatk} CombineGVCFs -R {params.genome} -V {inputs} -O {output}")
+
+
+rule GenotypeGVCFs:
+	input:
+		output_dir + 'callsnp/combined/All.g.vcf.gz'
+	output:
+		output_dir + 'callsnp/combined/All.vcf.gz'
+	params:
+		gatk = config['soft']['gatk'],
+		genome = config['fa']
+	shell:
+		"""
+		{params.gatk} GenotypeGVCFs -R {params.genome} -V {input} -O {output}
+		"""
+
+rule SelectVariantsSNP:
+	input:
+		output_dir + 'callsnp/combined/All.vcf.gz'
+	output:
+		temp(output_dir + 'callsnp/combined/All.snp.vcf.gz')
+	shell:
+		"""
+		gatk SelectVariants -select-type SNP \
+		-V {input} -O {output}
+		"""
+
+rule VariantFiltrationSNP:
+	input:
+		output_dir + 'callsnp/combined/All.snp.vcf.gz'
+	output:
+		temp(output_dir + 'callsnp/combined/All.snp.filter.vcf.gz')
+	params:
+		SNPTHRESHOLD = config['wes_config']['SNPTHRESHOLD']
+	shell:
+		"""
+		gatk VariantFiltration \
+		--filter-expression {params.SNPTHRESHOLD} \
+		--filter-name "Filter" \
+		-O {output} -V {input}
+		"""
+
+
+rule SelectVariantsINDEL:
+	input:
+		output_dir + 'callsnp/combined/All.vcf.gz'
+	output:
+		temp(output_dir + 'callsnp/combined/All.indel.vcf.gz')
+	shell:
+		"""
+		gatk SelectVariants -select-type INDEL \
+		-V {input} -O {output}
+		"""
+
+rule VariantFiltrationINDEL:
+	input:
+		output_dir + 'callsnp/combined/All.indel.vcf.gz'
+	output:
+		temp(output_dir + 'callsnp/combined/All.indel.filter.vcf.gz')
+	params:
+		INDELTHRESHOLD = config['wes_config']['INDELTHRESHOLD']
+	shell:
+		"""
+		gatk VariantFiltration \
+		--filter-expression {params.INDELTHRESHOLD} \
+		--filter-name "Filter" \
+		-O {output} -V {input}
+		"""
+
+rule MergeVCFs:
+	input:
+		indel = output_dir + 'callsnp/combined/All.indel.filter.vcf.gz',
+		snp = output_dir + 'callsnp/combined/All.snp.filter.vcf.gz'
+	output:
+		output_dir + "callsnp/All.filter.vcf.gz"
+	shell:
+		"""
+		gatk MergeVcfs \
+		-I {input.indel} \
+		-I {input.snp} \
+		-O {output}
+		"""
+
+
+# rule SNP_mod:
+# 	input:
+# 		output_dir + 'callsnp/combined/All.vcf.gz'
+# 	output:
+# 		recalfile  = output_dir + 'callsnp/combined/All.snps.recal',
+# 		tranchefile = output_dir + 'callsnp/combined/All.snps.tranches'
+# 	params:
+# 		rscriptfile = output_dir + 'callsnp/combined/All.snps.plots.R',
+# 		genome = config['fa'],
+# 		gatk = config['soft']['gatk'],
+# 		hapmap = config['hapmap'],
+# 		omni = config['1000G_omni2.5'],
+# 		G1000 = config['1000G_phase1'],
+# 		dbsnp = config['dbsnp146']
+# 	shell:
+# 		"""
+# 		{params.gatk} VariantRecalibrator \
+# 		-R {params.genome} \
+# 		-V {input} \
+# 		-resource:hapmap,known=false,training=true,truth=true,prior=15.0 {params.hapmap} \
+# 		-resource:omin,known=false,training=true,truth=false,prior=12.0 {params.omin} \
+# 		-resource:1000G,known=false,training=true,truth=false,prior=10.0 {params.G1000} \
+# 		-resource:dbsnp,known=true,training=false,truth=false,prior=2.0 {params.dbsnp} \
+# 		-an DP -an QD -an FS -an SOR -an ReadPosRankSum -an MQRankSum \
+# 		-mode SNP \
+# 		-tranche 100.0 -tranche 99.9 -tranche 99.0 -tranche 95.0 -tranche 90.0 \
+# 		--rscript-file {params.rscriptfile} \
+# 		--tranches-file {output.tranchefile} \
+# 		-O {output.recalfile}
+# 		"""
+
+# rule SNP_apply:
+# 	input:
+# 		vcf = output_dir + 'callsnp/combined/All.vcf.gz',
+# 		recalfile  = output_dir + 'callsnp/combined/All.snps.recal',
+# 		tranchefile = output_dir + 'callsnp/combined/All.snps.tranches'
+# 	output:
+# 		output_dir + 'callsnp/combined/snps.All.VQSR.vcf.gz'
+# 	params:
+# 		genome = config['fa'],
+# 		gatk = config['soft']['gatk']
+# 	shell:
+# 		"""
+# 		{params.gatk} ApplyVQSR \
+# 		-R {params.genome} \
+# 		-V {input.vcf} \
+# 		--recal-file {input.recalfile} \
+# 		--tranches-file {input.tranchefile} \
+# 		-mode SNP \
+# 		-O {output}
+# 		"""
+# rule indel_mod:
+# 	input:
+# 		output_dir + 'callsnp/combined/snps.All.VQSR.vcf.gz'
+# 	output:
+# 		recalfile  = output_dir + 'callsnp/combined/snps.All.indel.recal',
+# 		tranchefile = output_dir + 'callsnp/combined/snps.All.indel.tranches'
+# 	params:
+# 		rscriptfile = output_dir + 'callsnp/combined/snps.All.indel.plots.R',
+# 		genome = config['fa'],
+# 		gatk = config['soft']['gatk'],
+# 		mills = config['mills'],
+# 		dbsnp = config['dbsnp146']
+# 	shell:
+# 		"""
+# 		{params.gatk} VariantRecalibrator \
+# 		-R {params.genome} \
+# 		-V {input} \
+# 		-resource:mills,known=true,training=true,truth=true,prior=12.0 {params.mills} \
+# 		-resource:dbsnp,known=true,training=false,truth=false,prior=2.0 {params.dbsnp} \
+# 		-an DP -an QD -an FS -an SOR -an ReadPosRankSum -an MQRankSum \
+# 		-mode INDEL \
+# 		--max-gaussians 6 \
+# 		--rscript-file  {params.rscriptfile} \
+# 		--tranches-file {output.tranchefile} \
+# 		-O {output.recalfile}
+# 		"""
+# rule indel_apply:
+# 	input:
+# 		vcf = output_dir + 'callsnp/combined/snps.All.VQSR.vcf.gz',
+# 		recalfile  = output_dir + 'callsnp/combined/snps.All.indel.recal',
+# 		tranchefile = output_dir + 'callsnp/combined/snps.All.indel.tranches'
+# 	output:
+# 		output_dir + 'callsnp/snps.All.VQSR.indel.vcf.gz'
+# 	params:
+# 		genome = config['fa'],
+# 		gatk = config['soft']['gatk']
+# 	shell:
+# 		"""
+# 		{params.gatk} ApplyVQSR \
+# 		-R {params.genome} \
+# 		-V {input.vcf} \
+# 		-ts-filter-level 99.0 \
+# 		--recal-file {input.recalfile} \
+# 		--tranches-file {input.tranchefile} \
+# 		-mode INDEL \
+# 		-O {output}
+# 		"""
