@@ -1,8 +1,9 @@
 
 
-## WES (not complete)
+## WES
 
 All pipelien followed the GATK best practice
+
 
 ### QC
 
@@ -22,10 +23,34 @@ Inlucde:
 All config information was in `config` file, yaml format.
 
 ### GATK
+
+#### Germline mutation
+
 - BQSR
+
+- Filter mutaiton with hard criterion
+
+- Mutation annotation (VEP)
+
+- PCA
+
+#### Somatic mutation
+
 - Mutect2
-- Annotation
+
+- Mutation annotaiton (VEP)
+
+- vcf2maf and Maftools analysis
+
+### CNV analysis
+
+- CNVkitv2
+
+- gistic2
+
+- maftools analysis
 
 ### MultiQC
 
 generate the html report
+

@@ -22,8 +22,11 @@ Inlucde:
 All config information was in `config` file, yaml format.
 
 ### GATK
+
 - BQSR
+
 - VQSR
+
 - Joint
 
 ### MultiQC

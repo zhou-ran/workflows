@@ -1,13 +1,13 @@
 # NGS workflows
 
-This repos was all pipelines i used
+This repo was all pipelines i used.
 
-## RNA seq
+Including:
 
-## WES
+- RNA seq
 
+- WES
 
-## Single Cell RNA seq (10X)
+- WGS
 
-
-
+- APA benchmark

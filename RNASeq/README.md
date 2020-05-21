@@ -3,6 +3,10 @@
 
 All analysis pipeline was based the snakemake
 
+```shell
+snakemake -s Snakefile.smk
+```
+
 ## RNA SEQ (main)
 
 ### QC
@@ -11,6 +15,7 @@ Include:
  - FastQC
  - picard
  - multiQC
+ - GeneBodyCoverge
 
 ### Trim (optional)
 
@@ -25,7 +30,6 @@ All config information was in `config` file, yaml format.
 
 ### Quantificaiton
 
-
 #### RSEM
 
 All config information was in `config` file, yaml format.
@@ -39,7 +43,6 @@ R script
 generate the html report
 
 
-### Alternative splice
+### TODO
 
-Include:
- - DSU
+[] Alternative splice
