@@ -168,7 +168,7 @@ rule CNV_kit:
         ca = output_dir + 'BQSR/{normal_use_label}.markdups.BQSR.bam',
         normal = lambda wildcards: output_dir + 'BQSR/{}.markdups.BQSR.bam'.format(pair_com_dic[wildcards.normal_use_label])
     output:
-        output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.targetcoverage.cnn'
+        output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.markdups.BQSR.targetcoverage.cnn'
 
     params:
         cap_region= config['wes_config']['INTERVAL'],
@@ -191,7 +191,7 @@ rule CNV_kit:
 rule cnv_done:
     input:
         # expand(output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz', normal_use_label = normal_use),
-        expand(output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.targetcoverage.cnn', normal_use_label = normal_use)
+        expand(output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.markdups.BQSR.targetcoverage.cnn', normal_use_label = normal_use)
     output:
         output_dir + 'CNV/coverage/welldone'
     shell:
