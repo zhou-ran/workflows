@@ -9,10 +9,12 @@ def multiqc_input(wildcards):
 		input.extend(expand(output_dir + "BWA/{sample}.bam.bai",zip, sample = samples.Label.values.tolist()))
 		input.extend(expand(output_dir + "BWA/{sample}.hsmetrics.hg19.txt",zip, sample = samples.Label.values.tolist()))
 		input.extend(expand(output_dir + 'BQSR/{sample}.markdups.BQSR.bam', sample = samples.Label.values.tolist()))
-	if config["run_snp"]:
-		input.extend([output_dir + 'mutect2/vcf/welldone'])
 	if config["run_mutect"]:
-		input.extend([output_dir + 'mutect2/coverage/welldone'])
+		input.extend([output_dir + 'mutect2/vcf/welldone'])
+	if config["run_cnv"]:
+		input.extend([output_dir + 'CNV/coverage/welldone'])
+	if config["run_snp"]:
+		input.extend([output_dir + "callsnp/All.filter.vcf.gz"])
 	# if config["run_RSEM"]:
 	# 	input.extend(expand(output_dir + "RSEM/{sample}.transcript.bam", sample = samples.Label.values.tolist()))
 	# if config["run_Quant"]:

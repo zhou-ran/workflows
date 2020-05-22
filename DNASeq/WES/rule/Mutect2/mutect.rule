@@ -17,7 +17,7 @@ rule pileup:
         -I {input} \
         -L {params.interval_list} \
         -V {params.aof} \
-        -O $tumor_name.pileups.table
+        -O {output}
         '''
 
 rule PoN_build:
@@ -122,13 +122,10 @@ rule CalculateContamination:
     shell:
         '''
         {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" CalculateContamination \
-
         -I {input.ca} \
         -matched {input.normal} \
-
         -O {output.contamination}  \
         --tumor-segmentation {output.segment}
-
         '''
 rule filter_vcf:
     input:
@@ -178,7 +175,7 @@ rule CNV_kit:
         genome = config['fa'],
         access_five = config['wes_config']['access_five'],
         reference = output_dir +  'CNV/coverage/{normal_use_label}/reference.cnn',
-        outdir = output_dir
+        outdir = output_dir + 'CNV/coverage/{normal_use_label}/'
     shell:
         """
         cnvkit.py batch {input.ca} \
@@ -196,7 +193,7 @@ rule cnv_done:
         # expand(output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz', normal_use_label = normal_use),
         expand(output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.targetcoverage.cnn', normal_use_label = normal_use)
     output:
-        output_dir + 'mutect2/coverage/welldone'
+        output_dir + 'CNV/coverage/welldone'
     shell:
         '''
         touch {output}
