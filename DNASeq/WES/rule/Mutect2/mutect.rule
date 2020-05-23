@@ -29,7 +29,9 @@ rule PoN_build:
         gatk = config['soft']['gatk'],
         genome = config['fa'],
         interval_list = config['wes_config']['Preprocessed_interval']
-
+    log:
+        err = output_dir + 'log/PoN/{sample_normal}.err.log',
+        out = output_dir + 'log/PoN/{sample_normal}.stdout.log'
     shell:
         '''
         {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" Mutect2 \
@@ -38,26 +40,27 @@ rule PoN_build:
         -tumor {wildcards.sample_normal} \
         --disable-read-filter MateOnSameContigOrNoMappedMateReadFilter \
         -L {params.interval_list} \
-        -O {output.vcf}
+        -O {output.vcf} 2>{log.err} 1>{log.out}
         '''
 
 rule PoN_create:
     input:
         expand(output_dir + 'mutect2/PoN/{sample_normal}.vcf.gz', 
-        sample_normal = samples.Label[samples.Type=="N"].values.tolist())
+            sample_normal = samples.Label[samples.Type=="N"].values.tolist())
     output:
         pon_vcf = output_dir + 'mutect2/PoN/PoN.vcf.gz'
     params:
         gatk = config['soft']['gatk'],
         genome = config['fa']
-
+    log:
+        err = output_dir + 'log/PoN_create/PoN.err.log',
+        out = output_dir + 'log/PoN_create/PoN.stdout.log'
     run:
-        label_out = ' -vcfs '.join({})
+        label_out = ' -vcfs '.join(input)
         shell('''
-        {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" mutect2 CreateSomaticPanelOfNormals \
-        -vcfs {label_out} -O {output.pon_vcf} 
+        {params.gatk} --java-options "-Xmx50G -Djava.io.tmpdir=./" CreateSomaticPanelOfNormals \
+        -vcfs {label_out} -O {output.pon_vcf} 2>{log.err} 1>{log.out}
         ''')
-
 
 rule pair_com:
     input:
@@ -72,6 +75,9 @@ rule pair_com:
         interval_list = config['wes_config']['Preprocessed_interval'],
         aof = config['aof'],
         normal_label = lambda wildcards: pair_com_dic[wildcards.tumor_label]
+    log:
+        err = output_dir + 'log/pair_com/{tumor_label}.err.log',
+        out = output_dir + 'log/pair_com/{tumor_label}.stdout.log'
 
     run:
         if input.normal == input.ca:
@@ -84,7 +90,7 @@ rule pair_com:
                 --af-of-alleles-not-in-resource 0.0000025 \
                 -L {params.interval_list} \
                 -O {output.vcf} \
-                --bam-output {output.bam}
+                --bam-output {output.bam} 2>{log.err} 1>{log.out}
                 '''
             print(func)
             shell(func)
@@ -100,7 +106,7 @@ rule pair_com:
                 --af-of-alleles-not-in-resource 0.0000025 \
                 -L {params.interval_list} \
                 -O {output.vcf} \
-                --bam-output {output.bam}
+                --bam-output {output.bam} 2>{log.err} 1>{log.out}
                 '''
             print(func)
             shell(func)
@@ -118,6 +124,9 @@ rule CalculateContamination:
     params:
         gatk = config['soft']['gatk'],
         genome = config['fa']
+    log:
+        err = output_dir + 'log/CalculateContamination/{normal_use_label}.err.log',
+        out = output_dir + 'log/CalculateContamination/{normal_use_label}.stdout.log'
 
     shell:
         '''
@@ -125,8 +134,9 @@ rule CalculateContamination:
         -I {input.ca} \
         -matched {input.normal} \
         -O {output.contamination}  \
-        --tumor-segmentation {output.segment}
+        --tumor-segmentation {output.segment}  2>{log.err} 1>{log.out}
         '''
+
 rule filter_vcf:
     input:
         contamination = output_dir + 'mutect2/contamination/{normal_use_label}.contamination.table',
@@ -148,13 +158,87 @@ rule filter_vcf:
         --contamination-table {input.contamination}
         '''
 
+rule vep_annot:
+    input:
+        output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz'
+    output:
+        output_dir + 'mutect2/vep/raw/{normal_use_label}.vep.vcf'
+    params:
+        vep = config['soft']['vep'],
+        vep_fa = config['vep']['fa'],
+        vep_dir = config['vep']['dir'],
+        ass_ver = config['vep']['ver'],
+        db = config['vep']['db']
+    shell:
+        '''
+        {params.vep} --species homo_sapiens \
+        --offline --no_progress --no_stats \
+        --sift b --ccds --uniprot --hgvs \
+        --symbol --numbers --domains \
+        --gene_phenotype --canonical \
+        --protein --biotype --uniprot \
+        --tsl --pubmed --variant_class \
+        --shift_hgvs 1 --check_existing \
+        --total_length --allele_number \
+        --no_escape --xref_refseq --failed 1 \
+        --vcf --minimal --flag_pick_allele \
+        --pick_order canonical,tsl,biotype,rank,ccds,length \
+        --dir {params.vep_dir} \
+        --fasta {params.vep_fa} \
+        --format vcf --input_file {input} \
+        --output_file {output} --polyphen b --af \
+        --af_1kg --af_esp --regulatory \
+        --assembly {params.ass_ver} --database ~/.vep/homo_sapiens/100_GRCh38 \
+        --force_overwrite
+        '''
+rule vcf_pass:
+    input:
+        output_dir + 'mutect2/vep/raw/{normal_use_label}.vep.vcf'
+    output:
+        output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf'
+    params:
+        bcftools = config['soft']['bcftools']
+    shell:
+        '''
+        {params.bcftools} view -f PASS {input} > {output}
+        '''
+
+rule vcf2maf:
+        input:
+            output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf'
+        output:
+            output_dir + 'mutect2/vep/pass/{normal_use_label}.vep.maf'
+        params:
+            label = '{normal_use_label}',
+            vep_fa = config['vep']['fa']
+        shell:
+            '''
+            /home/zhouran/data/soft/vcf2maf-master/vcf2maf.pl \
+            --input-vcf {input} \
+            --output-maf {output} \
+            --tumor-id {params.label} --ref-fasta {params.vep_fa} \
+            --filter-vcf 0
+            '''
+rule mergemaf:
+        input:
+            expand(output_dir + 'mutect2/vep/pass/{normal_use_label}.vep.maf',
+                normal_use_label = normal_use)
+        output:
+            output_dir + 'mutect2/vep/merged.maf'
+        shell:
+            '''
+            cat {input} | egrep "^#|^Hugo_Symbol" | head -2 > {output}
+            cat {input} | egrep -v "^#|^Hugo_Symbol" >> {output}
+            '''
+
 rule mutect2_done:
     input:
         expand(output_dir + 'mutect2/rawvcf/{tumor_label}.vcf.gz', \
             tumor_label = samples.Label[samples.Type != 'N']),
-        expand(output_dir + 'mutect2/vcf/{normal_use_label}.vcf.gz', \
+        expand(output_dir + 'mutect2/vep/pass/{normal_use_label}.vep.maf', \
             normal_use_label = normal_use
-            )
+            ),
+        output_dir + 'mutect2/vep/merged.maf'
     output:
         output_dir + 'mutect2/vcf/welldone'
     shell:
@@ -176,8 +260,12 @@ rule CNV_kit:
         access_five = config['wes_config']['access_five'],
         reference = output_dir +  'CNV/coverage/{normal_use_label}/reference.cnn',
         outdir = output_dir + 'CNV/coverage/{normal_use_label}/'
+    log:
+        err = output_dir + 'log/CNV_kit/{normal_use_label}.err.log',
+        out = output_dir + 'log/CNV_kit/{normal_use_label}.stdout.log'
+
     shell:
-        """
+        '''
         cnvkit.py batch {input.ca} \
         --normal {input.normal} \
         --targets {params.cap_region} \
@@ -185,8 +273,60 @@ rule CNV_kit:
         --access {params.access_five} \
         --target-avg-size 100 \
         --output-reference {params.reference} --output-dir {params.outdir} \
-        --diagram   --scatter  -p 2 
-        """
+        --diagram   --scatter  -p 2 2>{log.err} 1>{log.out}
+        '''
+
+rule gistic2_pre:
+    input:
+        expand(output_dir +  'CNV/coverage/{normal_use_label}/{normal_use_label}.markdups.BQSR.targetcoverage.cnn',
+            normal_use_label = normal_use)
+    output:
+        output_dir + 'CNV/gistic2/input/allsample.seg.tsv',
+        output_dir + 'CNV/gistic2/input/markers.tsv'
+    params:
+        r_script = config['soft']['r_script'],
+        make_gistic = config['script']['make_gistic'],
+        label = ','.join(expand('{normal_use_label}', normal_use_label=normal_use)),
+        out_prefix = output_dir + 'CNV/gistic2/input/',
+        input_join = lambda wildcards: \
+            ','.join(expand(output_dir +  \
+            'CNV/coverage/{normal_use_label}/{normal_use_label}.markdups.BQSR.targetcoverage.cnn',\
+            normal_use_label = normal_use))
+    shell:
+        '''
+        {params.r_script} {params.make_gistic} {params.input_join} {params.label} {params.out_prefix}
+        '''
+rule gistic2:
+    input:
+        seg = output_dir + 'CNV/gistic2/input/allsample.seg.tsv',
+        markers = output_dir + 'CNV/gistic2/input/markers.tsv'
+    output:
+        output_dir + "CNV/gistic2/scores.gistic"
+    params:
+        gistic = config['soft']['gistic2'],
+        out_pre = output_dir + 'CNV/gistic2/',
+        gistic_ref = config['gistic2']['mat']
+    shell:
+        '''
+        /home/zhouran/data/soft/GISTIC/gistic2 \
+        -b {params.out_pre} \
+        -seg {input.seg} \
+        -mk {input.markers} \
+        -refgene {params.gistic_ref} \
+        -ta 0.1 \
+        -armpeel 1 \
+        -brlen 0.7 \
+        -cap 1.5 \
+        -conf 0.99 \
+        -td 0.1 \
+        -genegistic 1 \
+        -gcm extreme \
+        -js 4 \
+        -maxseg 2000 \
+        -qvt 0.1 \
+        -rx 0 \
+        -savegene 1
+        '''
 
 rule cnv_done:
     input:
