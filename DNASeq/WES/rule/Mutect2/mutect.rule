@@ -202,21 +202,36 @@ rule vcf_pass:
         '''
         {params.bcftools} view -f PASS {input} > {output}
         '''
+rule vcf_pass_2:
+    input:
+        output_dir + 'mutect2/vep/raw/{normal_use_label}.PASS.vcf'
+    output:
+        output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vep.vcf'
+    shell:
+        '''
+        cp {input} {output}
+        '''
 
 rule vcf2maf:
         input:
-            output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf'
+            output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf',
+            output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vep.vcf'
         output:
             output_dir + 'mutect2/vep/pass/{normal_use_label}.vep.maf'
         params:
             label = '{normal_use_label}',
-            vep_fa = config['vep']['fa']
+            normal_label = lambda wildcards: pair_com_dic[wildcards.normal_use_label],
+            vep_fa = config['vep']['fa'],
+            genome_ver = config['ver']
         shell:
             '''
             /home/zhouran/data/soft/vcf2maf-master/vcf2maf.pl \
-            --input-vcf {input} \
+            --input-vcf {input[0]} \
             --output-maf {output} \
-            --tumor-id {params.label} --ref-fasta {params.vep_fa} \
+            --tumor-id {params.label} \
+            --normal-id {params.normal_label} \
+            --ref-fasta {params.vep_fa} \
+            --ncbi-build {params.genome_ver} \
             --filter-vcf 0
             '''
 rule mergemaf:
@@ -225,11 +240,11 @@ rule mergemaf:
                 normal_use_label = normal_use)
         output:
             output_dir + 'mutect2/vep/merged.maf'
-        shell:
-            '''
-            cat {input} | egrep "^#|^Hugo_Symbol" | head -2 > {output}
-            cat {input} | egrep -v "^#|^Hugo_Symbol" >> {output}
-            '''
+        run:
+            cmds = ['cat {input} | egrep "^#|^Hugo_Symbol" | head -2 > {output}',
+                    'cat {input} | egrep -v "^#|^Hugo_Symbol" >> {output}']
+            for cmd in cmds:
+                shell(cmd)
 
 rule mutect2_done:
     input:
@@ -307,6 +322,7 @@ rule gistic2:
         out_pre = output_dir + 'CNV/gistic2/',
         gistic_ref = config['gistic2']['mat']
     shell:
+        # copy from https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/CNV_Pipeline/
         '''
         /home/zhouran/data/soft/GISTIC/gistic2 \
         -b {params.out_pre} \
@@ -323,7 +339,7 @@ rule gistic2:
         -gcm extreme \
         -js 4 \
         -maxseg 2000 \
-        -qvt 0.1 \
+        -qvt 0.25 \
         -rx 0 \
         -savegene 1
         '''

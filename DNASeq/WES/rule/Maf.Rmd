@@ -1,0 +1,151 @@
+---
+title: "General survey of the somatic mutation "
+author: "Zhouran"
+date: "24/5/2020"
+output: html_document
+---
+
+## load library
+
+```{r}
+library(maftools)
+dat <- read.maf('data/mutect2/vep/merged.maf')
+
+```
+
+## Mutation summary
+
+```{r}
+
+plotmafSummary(
+  maf = dat,
+  rmOutlier = TRUE,
+  addStat = 'median',
+  dashboard = TRUE,
+  titvRaw = FALSE
+)
+
+```
+## oncoplot, somatic mutation
+
+```{r }
+
+oncoplot(
+  maf = dat,
+  showTumorSampleBarcodes = T,
+  removeNonMutated = FALSE,
+  sortByMutation = T,
+  SampleNamefontSize=.6
+)
+
+
+```
+
+## Transition and Transversions
+
+```{r}
+panc.titv = titv(maf = dat, plot = FALSE, useSyn = TRUE)
+#plot titv summary
+plotTiTv(res = panc.titv)
+
+```
+
+## VAF
+
+```{r}
+
+plotVaf(maf = dat)
+
+```
+
+## somatic interaction
+
+```{r fig.dim=c(10,10)}
+somaticInteractions(maf = dat,
+                    top = 50,
+                    pvalue = c(0.05, 0.1))
+
+```
+
+## CNV
+
+---
+title: "cnv analysis"
+author: "Zhouran"
+date: "8/28/2019"
+output: html_document
+---
+
+```{r}
+library(maftools)
+```
+
+```{r}
+gisticAllLesionsFile <- "all_lesions.conf_99.txt"
+gisticAmpGenesFile <-  "amp_genes.conf_99.txt"
+gisticDelGenesFile <-  "del_genes.conf_99.txt"
+gisticScoresFile <-  "scores.gistic"
+
+```
+
+
+```{r}
+dat = readGistic(
+  gisticAllLesionsFile = gisticAllLesionsFile,
+  gisticAmpGenesFile = gisticAmpGenesFile,
+  gisticDelGenesFile = gisticDelGenesFile,
+  gisticScoresFile = gisticScoresFile,
+  isTCGA = F
+)
+
+```
+
+```{r}
+pdf('gisticChrom.pdf')
+gisticChromPlot(gistic = dat, markBands = "all")
+dev.off()
+
+write.csv(dat@gene.summary,file='geneWithCNV.csv',quote=F)
+```
+
+```{r}
+gisticBubblePlot(gistic = dat)
+```
+
+```{r}
+pdf('OncoPlot.pdf',6,10)
+gisticOncoPlot(
+  gistic = dat,
+  sortByAnnotation = TRUE,
+  top = 50,
+  showTumorSampleBarcodes = T,
+  SampleNamefontSize = 0.5,
+  barcode_mar = 10,
+  gene_mar = 10,
+  sampleOrder = goodSamples
+)
+dev.off()
+```
+
+
+```{r}
+luad.plus.gistic <-
+  read.maf(
+    maf = "../HardThreshold/subtractWT/subtractWT.maf",
+    gisticAllLesionsFile = "all_lesions.conf_99.txt",
+    gisticAmpGenesFile = "amp_genes.conf_99.txt",
+    gisticDelGenesFile = "del_genes.conf_99.txt",
+    gisticScoresFile = "scores.gistic"
+  )
+
+pdf('top100.onco.pdf',12,16)
+oncoplot(maf = luad.plus.gistic,
+         borderCol = NULL,
+         top = 100)
+dev.off()
+
+
+oncoplot(maf = luad.plus.gistic,
+         borderCol = NULL,genes = c('ARAP2','BCRP2'))
+
+```
