@@ -7,5 +7,6 @@ modified script
 ## qapa
 
 ## mountainClimber
+This tool is 垃圾(means good but not recommend)。
 
 ## roar

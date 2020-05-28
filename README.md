@@ -5,7 +5,7 @@ This repo was all pipelines i used.
 Including:
 
 - RNA seq
-
+ 
 - WES
 
 - WGS

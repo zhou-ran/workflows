@@ -4,6 +4,7 @@
 
 All pipelien followed the GATK best practice
 
+All sample must be paired, (normal vs ca).
 
 ### QC
 
