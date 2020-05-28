@@ -60,7 +60,7 @@ rule VariantFiltrationSNP:
 	shell:
 		"""
 		gatk VariantFiltration \
-		--filter-expression {params.SNPTHRESHOLD} \
+		--filter-expression "{params.SNPTHRESHOLD}" \
 		--filter-name "Filter" \
 		-O {output} -V {input}
 		"""
@@ -87,7 +87,7 @@ rule VariantFiltrationINDEL:
 	shell:
 		"""
 		gatk VariantFiltration \
-		--filter-expression {params.INDELTHRESHOLD} \
+		--filter-expression "{params.INDELTHRESHOLD}" \
 		--filter-name "Filter" \
 		-O {output} -V {input}
 		"""

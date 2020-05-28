@@ -7,7 +7,7 @@ def multiqc_input(wildcards):
 	
 	if config["run_BWA"]:
 		input.extend(expand(output_dir + "BWA/{sample}.bam.bai",zip, sample = samples.Label.values.tolist()))
-		input.extend(expand(output_dir + "BWA/{sample}.hsmetrics.hg19.txt",zip, sample = samples.Label.values.tolist()))
+		input.extend(expand(output_dir + "BWA/{sample}.hsmetrics.hg38.txt",zip, sample = samples.Label.values.tolist()))
 		input.extend(expand(output_dir + 'BQSR/{sample}.markdups.BQSR.bam', sample = samples.Label.values.tolist()))
 	if config["run_mutect"]:
 		input.extend([output_dir + 'mutect2/vcf/welldone'])

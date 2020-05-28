@@ -1,48 +1,49 @@
 
 rule bwa:
-	input:
-		FASTQdir + "{sample}." +str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
-		FASTQdir + "{sample}." +str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
-	
-	output:
-		output_dir + "BWA/{sample}.bam"
-	
-	params:
-		bwa   = config['soft']['bwa'],
-		cores = config['bwa']['cores'],
-		index = config['bwa']['index'],
-		samtools = config['soft']['samtools'],
-		sample = '{sample}'
-	shell:
-		"""
-		
-		{params.bwa} mem -R '@RG\\tID:{params.sample}\\tSM:{params.sample}\\tPL:Illumina' \
-		-t {params.cores} {params.index} {input} | {params.samtools} sort -O bam - -o {output}
+    input:
+        FASTQdir + "{sample}." +str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+        FASTQdir + "{sample}." +str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"
+    
+    output:
+        output_dir + "BWA/{sample}.bam"
+    
+    params:
+        bwa   = config['soft']['bwa'],
+        cores = config['bwa']['cores'],
+        index = config['bwa']['index'],
+        samtools = config['soft']['samtools'],
+        sample = '{sample}'
+    shell:
+        """
+        
+        {params.bwa} mem -R '@RG\\tID:{params.sample}\\tSM:{params.sample}\\tPL:Illumina' \
+        -t {params.cores} {params.index} {input} | {params.samtools} sort -O bam - -o {output}
 
-		"""
+        """
 
 rule bamindex:
-	input:
-		output_dir + "BWA/{sample}.bam"
-	output:
-		output_dir + "BWA/{sample}.bam.bai"
-	params:
-		samtools = config['soft']['samtools']
-	shell:
-		"""
-		{params.samtools} index {input}
-		"""
+    input:
+        output_dir + "BWA/{sample}.bam"
+    output:
+        output_dir + "BWA/{sample}.bam.bai"
+    params:
+        samtools = config['soft']['samtools']
+    shell:
+        """
+        {params.samtools} index {input}
+        """
 
 rule HsMetrics:
     input:
-        bam = output_dir + "BWA/{sample}.bam.bai"
+        bai = output_dir + "BWA/{sample}.bam.bai",
+        bam = output_dir + "BWA/{sample}.bam"
     output:
-        metrics=output_dir + "BWA/{sample}.hsmetrics.hg19.txt"
+        metrics=output_dir + "BWA/{sample}.hsmetrics.hg38.txt"
     params:
-        interval_file = config["wes_config"]["INTERVAL"],
+        interval_file = config["wes_config"]["Preprocessed_interval"],
         gatk = config["soft"]["gatk"]
     shell:
-        """
-        gatk CollectHsMetrics -BI {params.interval_file} -I {input.bam} \
+        '''
+        {params.gatk} CollectHsMetrics -BI {params.interval_file} -I {input.bam} \
         -O {output.metrics} -TI {params.interval_file} --VALIDATION_STRINGENCY=LENIENT
-        """
+        '''
