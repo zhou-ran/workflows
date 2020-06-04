@@ -195,26 +195,26 @@ rule vcf_pass:
     input:
         output_dir + 'mutect2/vep/raw/{normal_use_label}.vep.vcf'
     output:
-        output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf'
+        output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vep.vcf'
     params:
         bcftools = config['soft']['bcftools']
     shell:
         '''
         {params.bcftools} view -f PASS {input} > {output}
         '''
-rule vcf_pass_2:
-    input:
-        output_dir + 'mutect2/vep/raw/{normal_use_label}.PASS.vcf'
-    output:
-        output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vep.vcf'
-    shell:
-        '''
-        cp {input} {output}
-        '''
+# rule vcf_pass_2:
+#     input:
+#         output_dir + 'mutect2/vep/raw/{normal_use_label}.PASS.vcf'
+#     output:
+#         output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vep.vcf'
+#     shell:
+#         '''
+#         cp {input} {output}
+#         '''
 
 rule vcf2maf:
         input:
-            output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf',
+            # output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vcf',
             output_dir + 'mutect2/vep/pass/{normal_use_label}.PASS.vep.vcf'
         output:
             output_dir + 'mutect2/vep/pass/{normal_use_label}.vep.maf'
