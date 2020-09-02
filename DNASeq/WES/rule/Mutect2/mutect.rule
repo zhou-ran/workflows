@@ -222,7 +222,7 @@ rule vcf2maf:
             label = '{normal_use_label}',
             normal_label = lambda wildcards: pair_com_dic[wildcards.normal_use_label],
             vep_fa = config['vep']['fa'],
-            genome_ver = config['ver']
+            genome_ver = config['vep']['ver']
         shell:
             '''
             /home/zhouran/data/soft/vcf2maf-master/vcf2maf.pl \
