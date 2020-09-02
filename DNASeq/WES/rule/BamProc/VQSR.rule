@@ -44,9 +44,11 @@ rule SelectVariantsSNP:
 		output_dir + 'callsnp/combined/All.vcf.gz'
 	output:
 		temp(output_dir + 'callsnp/combined/All.snp.vcf.gz')
+	params:
+		gatk = config['soft']['gatk']
 	shell:
 		"""
-		gatk SelectVariants -select-type SNP \
+		{params.gatk} SelectVariants -select-type SNP \
 		-V {input} -O {output}
 		"""
 
@@ -56,10 +58,11 @@ rule VariantFiltrationSNP:
 	output:
 		temp(output_dir + 'callsnp/combined/All.snp.filter.vcf.gz')
 	params:
-		SNPTHRESHOLD = config['wes_config']['SNPTHRESHOLD']
+		SNPTHRESHOLD = config['wes_config']['SNPTHRESHOLD'],
+		gatk = config['soft']['gatk']
 	shell:
 		"""
-		gatk VariantFiltration \
+		{params.gatk} VariantFiltration \
 		--filter-expression "{params.SNPTHRESHOLD}" \
 		--filter-name "Filter" \
 		-O {output} -V {input}
@@ -71,9 +74,11 @@ rule SelectVariantsINDEL:
 		output_dir + 'callsnp/combined/All.vcf.gz'
 	output:
 		temp(output_dir + 'callsnp/combined/All.indel.vcf.gz')
+	params:
+		gatk = config['soft']['gatk']
 	shell:
 		"""
-		gatk SelectVariants -select-type INDEL \
+		{params.gatk} SelectVariants -select-type INDEL \
 		-V {input} -O {output}
 		"""
 
@@ -83,10 +88,11 @@ rule VariantFiltrationINDEL:
 	output:
 		temp(output_dir + 'callsnp/combined/All.indel.filter.vcf.gz')
 	params:
-		INDELTHRESHOLD = config['wes_config']['INDELTHRESHOLD']
+		INDELTHRESHOLD = config['wes_config']['INDELTHRESHOLD'],
+		gatk = config['soft']['gatk']
 	shell:
 		"""
-		gatk VariantFiltration \
+		{params.gatk} VariantFiltration \
 		--filter-expression "{params.INDELTHRESHOLD}" \
 		--filter-name "Filter" \
 		-O {output} -V {input}
@@ -98,9 +104,11 @@ rule MergeVCFs:
 		snp = output_dir + 'callsnp/combined/All.snp.filter.vcf.gz'
 	output:
 		output_dir + "callsnp/All.filter.vcf.gz"
+	params:
+		gatk = config['soft']['gatk']
 	shell:
 		"""
-		gatk MergeVcfs \
+		{params.gatk} MergeVcfs \
 		-I {input.indel} \
 		-I {input.snp} \
 		-O {output}
