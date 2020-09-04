@@ -63,6 +63,7 @@ vep:
  dir: /home/zhouran/.vep
  ver: GRCh38
  db: /home/zhouran/.vep/homo_sapiens/100_GRCh38
+ cache: 100
 
 ## gistic2 information
 gistic2:

@@ -8,7 +8,7 @@ rule gvcf:
 		genome = config['fa']
 	shell:
 		""""
-		gatk HaplotypeCaller -R {params.genome} \
+		{params.gatk} HaplotypeCaller -R {params.genome} \
 		-I {input} -O {output} -ERC GVCF \
 		--java-options \'-DGATK_STACKTRACE_ON_USER_EXCEPTION=true\'
 		"""

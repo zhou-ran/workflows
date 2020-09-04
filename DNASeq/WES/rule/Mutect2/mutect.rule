@@ -222,7 +222,8 @@ rule vcf2maf:
             label = '{normal_use_label}',
             normal_label = lambda wildcards: pair_com_dic[wildcards.normal_use_label],
             vep_fa = config['vep']['fa'],
-            genome_ver = config['vep']['ver']
+            genome_ver = config['vep']['ver'],
+            cache = config['vep']['cache']
         shell:
             '''
             /home/zhouran/data/soft/vcf2maf-master/vcf2maf.pl \
@@ -232,7 +233,8 @@ rule vcf2maf:
             --normal-id {params.normal_label} \
             --ref-fasta {params.vep_fa} \
             --ncbi-build {params.genome_ver} \
-            --filter-vcf 0
+            --filter-vcf 0 \
+            --cache-version {params.cache}
             '''
 rule mergemaf:
         input:
