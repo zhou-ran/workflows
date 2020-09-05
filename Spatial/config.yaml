@@ -1,0 +1,42 @@
+# meta file
+metatxt: meta.tsv
+
+# fastq file dir and suffix
+FASTQ: fq
+fqsuffix: fastq
+
+# output location
+output: data
+
+# tmp file location
+tmpdir: tmp
+
+# genome information
+genome:
+ fa: /mnt/raid61/Microwell/mm10/fasta/genome.fa
+ juncbed: /mnt/data8/zhouran/proj/2020-09-03-spatial/sicelorel/sicelore-master/Gencode/gencode.v18.mm10.junctions.bed
+ refFlat: /mnt/data8/zhouran/proj/2020-09-03-spatial/sicelorel/sicelore-master/Gencode/gencode.v18.mm10.refFlat.txt
+
+# barcode and umi information
+bc: CB
+gn: GN
+umi: UB
+
+# cores use
+cores: 8
+
+# java information
+java:
+ java: /home/zhouran/data/anaconda3/bin/java
+ xmx: 100g
+ xms: 30g
+ mostxms: 4g
+
+# soft information
+soft:
+ parser: /mnt/data8/zhouran/proj/2020-09-03-spatial/sicelorel/sicelore-master/Jar/IlluminaParser-1.0.jar
+ samtools: /home/zhouran/data/soft/samtools/current/bin/samtools
+ sicelore: /mnt/data8/zhouran/proj/2020-09-03-spatial/sicelorel/sicelore-master/Jar/Sicelore-2.0.jar
+ bu_finder: /mnt/data8/zhouran/proj/2020-09-03-spatial/sicelorel/sicelore-master/Jar/NanoporeBC_UMI_finder-1.0.jar
+ minimap2: /home/zhouran/data/soft/minimap/current/minimap2
+ nanoscan: /mnt/data8/zhouran/proj/2020-09-03-spatial/sicelorel/sicelore-master/Jar/NanoporeReadScanner-0.5.jar
