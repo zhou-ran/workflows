@@ -12,3 +12,4 @@ Including:
 
 - APA benchmark
 
+- SpaISO-Seq
