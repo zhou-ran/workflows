@@ -7,6 +7,7 @@ config = args[1]
 gtf = args[2]
 output = args[3]
 
+
 txdb <-
   makeTxDbFromGFF(gtf,
                   format = 'gtf')
@@ -39,6 +40,7 @@ fileNames <- split(sampleList$names, sampleList$Strand)
 se <- lapply(names(fileNames),function(x){
   
   name <- fileNames[[x]]
+  # Must change the search dir or pattern based your output
   bamFile <- paste('./data/STAR/',
                  name,
                  '.Aligned.sortedByCoord.out.bam',

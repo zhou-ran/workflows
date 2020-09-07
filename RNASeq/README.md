@@ -38,6 +38,10 @@ All config information was in `config` file, yaml format.
 
 R script
 
+### Alternative splice
+
+TODO
+
 ### MultiQC
 
 generate the html report
@@ -45,4 +49,4 @@ generate the html report
 
 ### TODO
 
-[] Alternative splice
+[] Alternative splice, rMATS_4.1
