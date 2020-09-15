@@ -13,5 +13,5 @@ rule GeneBodyQC:
         I={input} \
         O={output} \
         REF_FLAT={params.refFlat} \
-        STRAND=NONE
+        STRAND={params.strand}
         """

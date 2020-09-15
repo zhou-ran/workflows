@@ -1,0 +1,19 @@
+output: data
+metatxt: meta.tsv
+
+refFlat: /mnt/raid62/Personal_data/lizhidan/genePred_refFlat/Mus_musculus.GRCm38.93.refFlat
+bed12: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/Mus_musculus.GRCm38.93.bed12
+
+strand: False
+
+FASTQ: fq
+# fqext1: R1
+# fqext2: R2
+fqsuffix: fq
+
+
+soft:
+ picard: /home/zhouran/data/soft/picard/picard.jar
+ read_dist: /home/zhouran/data/anaconda3/envs/npm/bin/read_distribution.py
+ genebody: /home/zhouran/data/anaconda3/bin/geneBody_coverage.py
+ FastQC: /home/zhouran/data/anaconda3/bin/fastqc
