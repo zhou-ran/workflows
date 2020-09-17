@@ -2,14 +2,14 @@ import pandas as pd
 
 ## Configuration file
 if len(config) == 0:
-	if os.path.isfile("./config.yaml"):
-		configfile: "./config.yaml"
-	else:
-		sys.exit("Make sure there is a config.yaml file in " + os.getcwd() + " or specify one with the --configfile commandline parameter.")
+    if os.path.isfile("./config.yaml"):
+        configfile: "./config.yaml"
+    else:
+        sys.exit("Make sure there is a config.yaml file in " + os.getcwd() + " or specify one with the --configfile commandline parameter.")
 
 ## Read metadata
 if not os.path.isfile(config["metatxt"]):
-	sys.exit("Metadata file " + config["metatxt"] + " does not exist.")
+    sys.exit("Metadata file " + config["metatxt"] + " does not exist.")
 
 meta = pd.read_csv(config["metatxt"], sep='\t')
 
@@ -34,8 +34,12 @@ rule all:
     input:
         expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples),
         expand(output_dir + "rseqc/{sample}.txt", sample = samples),
-        expand(output_dir + "fastqc_raw/{sample}_{pair}_fastqc.zip", sample=samples,pair=pairs),
-        expand(output_dir + "fastqc_filter/{sample}_{pair}_fastqc.zip", sample=samples,pair=pairs)
+        expand(output_dir + 'genebody/{sample}.geneBodyCoverage.txt', sample = samples),
+        expand(output_dir + "fastqc_filter/{sample}_{pair}.txt", sample=samples, pair=pairs),
+        expand(output_dir + "fastqc_raw/{sample}_{pair}.txt", sample=samples, pair=pairs),
+        expand(output_dir + 'q30/{sample}_{pair}.txt', sample=samples, pair=pairs),
+        output_dir + "fastqc_filter/fastqc.Rds",
+        output_dir + "fastqc_raw/fastqc.Rds"
 
 rule fastqc_raw:
     input:
@@ -50,6 +54,33 @@ rule fastqc_raw:
     shell:
         """
         {params.FastQC} -o {params.outdir} {input.fastq} > {log}
+        """
+
+rule fetch_fastqc_raw:
+    input:
+        output_dir + "fastqc_raw/{sample}_{pair}_fastqc.zip"
+    output:
+        output_dir + "fastqc_raw/{sample}_{pair}.txt"
+    params:
+        output_dir + "fastqc_raw/{sample}_{pair}_fastqc",
+        output_dir + "fastqc_raw/"
+    shell:
+        """
+
+        unzip -o -q {input} -d {params[1]} && sed -n "13,51p" {params[0]}/fastqc_data.txt > {output}
+
+        """
+
+rule fastqc_raw_collpase:
+    input:
+        expand(output_dir + "fastqc_raw/{sample}_{pair}.txt", sample=samples, pair=pairs)
+    output:
+        output_dir + "fastqc_raw/fastqc.Rds"
+    params:
+        expand(output_dir + "fastqc_raw/{sample}_{pair}", sample=samples, pair=pairs)
+    shell:
+        """
+        Rscript bin/collapse.R {input} {output}
         """
 
 rule fastqc:
@@ -69,6 +100,54 @@ rule fastqc:
 
         """
 
+rule fetch_fastqc:
+    input:
+        output_dir + "fastqc_filter/{sample}_{pair}_fastqc.zip"
+    output:
+        output_dir + "fastqc_filter/{sample}_{pair}.txt"
+    params:
+        output_dir + "fastqc_raw/{sample}_{pair}_fastqc",
+        output_dir + "fastqc_raw/"
+    shell:
+        """
+
+
+        unzip -o -q {input} -d {params[1]} && sed -n "13,51p" {params[0]}/fastqc_data.txt > {output}
+
+        """
+
+rule fastqc_filter_collpase:
+    input:
+        expand(output_dir + "fastqc_filter/{sample}_{pair}.txt", sample=samples, pair=pairs)
+    output:
+        output_dir + "fastqc_filter/fastqc.Rds"
+
+    shell:
+        """
+        Rscript bin/collapse.R {input} {output}
+        """
+
+
+
+rule q30:
+    input:
+        fastq = "fq/" + "{sample}_" + "{pair}." + str(config["fqsuffix"]) + ".gz"
+    output:
+        output_dir + 'q30/{sample}_{pair}.txt'
+
+    shell:
+        """
+
+        python2 bin/q30.py {input} > {output}
+
+
+        """
+
+
+
+
+
+
 rule GeneBodyQC:
     input:
         output_dir + 'STAR/{sample}.Aligned.sortedByCoord.out.bam'
@@ -80,11 +159,13 @@ rule GeneBodyQC:
         strand = 'SECOND_READ_TRANSCRIPTION_STRAND' if config['strand'] else 'NONE'
     shell:
         """
+
         java -jar {params.picard} CollectRnaSeqMetrics \
         I={input} \
         O={output} \
         REF_FLAT={params.refFlat} \
         STRAND={params.strand}
+
         """
 
 rule read_dist:
@@ -122,6 +203,5 @@ rule coverage_plot:
 
 
         """
-
 
 
