@@ -38,6 +38,7 @@ rule all:
         expand(output_dir + "fastqc_filter/{sample}_{pair}.txt", sample=samples, pair=pairs),
         expand(output_dir + "fastqc_raw/{sample}_{pair}.txt", sample=samples, pair=pairs),
         expand(output_dir + 'q30/{sample}_{pair}.txt', sample=samples, pair=pairs),
+        expand(output_dir + 'TIN/{sample}.Aligned.sortedByCoord.out.summary.txt', sample=samples),
         output_dir + "fastqc_filter/fastqc.Rds",
         output_dir + "fastqc_raw/fastqc.Rds"
 
@@ -203,5 +204,17 @@ rule coverage_plot:
 
 
         """
+rule tin_calc:
+    input:
+        output_dir + 'STAR/{sample}.Aligned.sortedByCoord.out.bam'
+    output:
+        output_dir + 'TIN/{sample}.Aligned.sortedByCoord.out.summary.txt'
+    params:
+        tin = config['soft']['tin']
+        bed12 = config['bed12'],
+        prefix = output_dir + 'TIN/'
 
-
+    shell:
+        """
+        {params.tin} -i {input} -r {params.bed12} -o {output}
+        """
