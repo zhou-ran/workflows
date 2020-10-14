@@ -65,10 +65,19 @@ dapars:
  cov_threshold: 30
 ##---------------------------------------------------------------------------------------------
 
+## tapas information
+##---------------------------------------------------------------------------------------------
+tapas:
+ read_len: 100
+ ref: refFlat.txt
+##---------------------------------------------------------------------------------------------
+
+
 ## soft
 ##---------------------------------------------------------------------------------------------
 soft:
  STAR: /home/zhouran/data/soft/STAR/current/STAR
+ samtools: /home/zhouran/data/soft/samtools/current/bin/samtools
  bedtools: /usr/bin/bedtools
  qapa: /home/zhouran/data/anaconda3/bin/qapa
  salmon: /home/zhouran/data/soft/salmon/current/bin/salmon
@@ -76,6 +85,7 @@ soft:
  FastQC: /home/zhouran/data/anaconda3/bin/fastqc
  Rscript: /home/zhouran/data/soft/R/R.3.6/bin/Rscript
  genomeCov: /usr/bin/genomeCoverageBed
+ tapas: /mnt/data8/zhouran/soft/TAPAS/TAPAS-master/Finding_APA_Sites/APA_sites_detection
  dapars: /mnt/data8/zhouran/proj/2020-APA_bulk/Hema_mouse/bulk_tianjin/bin/Dapars2_Multi_Sample.py
  rsem_prepare: /home/zhouran/data/soft/RSEM/current/bin/rsem-prepare-reference
  mountain_climber:

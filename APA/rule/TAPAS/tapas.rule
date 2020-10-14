@@ -1,0 +1,32 @@
+rule sam_depth:
+    input:
+        output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
+
+	output:
+		temp(output_dir + "tapas/{sample}/read_coverage.txt.gz")
+
+    params:
+        samtools = config["soft"]["samtools"]
+    shell:
+        """
+        {params.samtools} depth {input} | gzip > {output}
+        """
+
+rule tapas:
+    input:
+        output_dir + "tapas/{sample}/read_coverage.txt.gz"
+    output:
+        output_dir + "tapas/{sample}/{sample}.txt"
+    params:
+        tapas = config["soft"]["tapas"],
+        refflat= config["tapas"]["ref"]
+    shell:
+        '''
+        
+        {params.tapas} \
+        -ref {params.refflat} \
+        -cov <(gunzip -c {input}) \
+        -l {params.refflat} \
+        -o {output}
+
+        '''
