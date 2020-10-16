@@ -1,6 +1,7 @@
 def mergeInput(wildcards):
 	index = samples.Index[samples.Label == wildcards.sample].values.tolist()
 	lane  = samples.Lane[samples.Label == wildcards.sample].values.tolist()
+	print(index,lane)
 	return expand(output_dir + "BWA/{{sample}}.{index}.{lane}.bam",zip,\
 		index = index,\
 		lane = lane)

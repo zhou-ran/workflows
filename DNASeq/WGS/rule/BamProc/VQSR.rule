@@ -51,7 +51,7 @@ rule SNP_mod:
 		genome = config['fa'],
 		gatk = config['soft']['gatk'],
 		hapmap = config['hapmap'],
-		omni = config['1000G_omni2.5'],
+		omin = config['1000G_omni2.5'],
 		G1000 = config['1000G_phase1'],
 		dbsnp = config['dbsnp146']
 	shell:

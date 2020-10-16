@@ -13,3 +13,5 @@ Including:
 - APA benchmark
 
 - SpaISO-Seq
+
+All pipeline have been tested which snakemake (5.26.1)

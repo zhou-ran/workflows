@@ -12,11 +12,11 @@ rule RSEM:
         cores = config["RSEM"]["cores"],
         index = config["RSEM"]["index"],
         strand = getStrand,
-        RSEM = config["soft"]["RSEM"]
+        rsem = config["soft"]["RSEM"]
 
     shell:
         """
-        {params.RSEM} \
+        {params.rsem} \
             --paired-end \
             --strandedness {params.strand}\
             --alignments \

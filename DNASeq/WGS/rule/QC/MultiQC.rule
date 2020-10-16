@@ -6,19 +6,10 @@ def multiqc_input(wildcards):
 		sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist()))
 	
 	if config["run_BWA"]:
-		# input.extend(expand(output_dir + "BWA/{sample}.{index}.{lane}.bam",zip, \
-		# sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist()))
+		input.extend(expand(output_dir + "BWA/{sample}.{index}.{lane}.bam",zip, \
+		sample = samples.Label.values.tolist(),index = samples.Index.values.tolist(),lane = samples.Lane.values.tolist())),
 		input.extend(expand(output_dir + 'callsnp/gvcf/{sample}.g.vcf.gz', sample = samples.Label.values.tolist())),
 		input.extend(expand(output_dir + 'callsnp/snps.All.VQSR.indel.vcf.gz', sample = samples.Label.values.tolist())),
-
-	# if config["run_RSEM"]:
-	# 	input.extend(expand(output_dir + "RSEM/{sample}.transcript.bam", sample = samples.Label.values.tolist()))
-	# if config["run_Quant"]:
-	# 	input.extend(["data/quant/quantSce.Rds"])
-	# if config["run_STAR"]:
-	# 	input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.Label.values.tolist()))
-	# if config["run_RNAmetrics"]:
-	# 	input.extend(expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples.Label.values.tolist()))
 
 	return input
 
