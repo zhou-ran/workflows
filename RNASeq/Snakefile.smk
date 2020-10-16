@@ -40,20 +40,7 @@ rule all:
 	input:
 		output_dir + "MultiQC/multiqc_report.html"
 
-rule runfastqc:
-	input:
-		expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),
-		expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),
-
 include: "rule/QC/FastQC.rule"
-
-rule runSTAR:
-	input:
-		expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist())
-# rule runRSEM:
-# 	input:
-# 		expand(output_dir + "RSEM/{sample}.transcript.bam",sample = samples.names.values.tolist())
-
 include: "rule/alignment/STAR_PE.rule"
 include: "rule/QC/MultiQC.rule"
 include: "rule/quant/RSEM.rule"

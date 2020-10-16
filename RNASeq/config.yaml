@@ -1,9 +1,9 @@
 
 ## Running Mode
 ##---------------------------------------------------------------------------------------------
-run_STAR: False
-run_RSEM: False
-run_Quant: False
+run_STAR: True
+run_RSEM: True
+run_Quant: True
 run_RNAmetrics: True
 run_trimming: False
 
@@ -29,11 +29,12 @@ metatxt: meta.tsv
 ## Single-end fastq files are supposed to be named 
 ## <sample-name>.<fqsuffix>.gz.
 ##---------------------------------------------------------------------------------------------
-FASTQ: fq
+FASTQ: example_data/FASTQ
 fqext1: R1
 fqext2: R2
-fqsuffix: fq
-strand: False
+fqsuffix: fastq
+
+
 ##---------------------------------------------------------------------------------------------
 
 ## STAR information
@@ -62,5 +63,6 @@ soft:
  RSEM: /home/zhouran/data/soft/RSEM/current/bin/rsem-calculate-expression
  multiqc: /home/zhouran/data/anaconda3/envs/multiqc/bin/multiqc
  Rscript: /home/zhouran/data/soft/R/R.3.6/bin/Rscript
+ samtools: /home/zhouran/data/anaconda3/bin/samtools
 ##---------------------------------------------------------------------------------------------
 

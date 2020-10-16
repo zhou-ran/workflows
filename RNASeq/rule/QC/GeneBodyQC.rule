@@ -1,3 +1,12 @@
+def getStrand(wildcards):
+    strand_index = {
+        "none": "None",
+        "reverse": "SECOND_READ_TRANSCRIPTION_STRAND",
+        "forward": "FIRST_READ_TRANSCRIPTION_STRAND"
+    }
+    strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
+    return strand_index[strand]
+
 rule GeneBodyQC:
     input:
         output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
@@ -6,7 +15,8 @@ rule GeneBodyQC:
     params:
         picard = config['soft']['picard'],
         refFlat = config['refFlat'],
-        strand = "SECOND_READ_TRANSCRIPTION_STRAND" if config['strand'] else "NONE"
+        strand = getStrand
+
     shell:
         """
         java -jar {params.picard} CollectRnaSeqMetrics \

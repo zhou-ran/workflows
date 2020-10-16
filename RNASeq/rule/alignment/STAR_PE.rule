@@ -1,12 +1,14 @@
 def star_func(wildcards):
 	# fetch the library type from the meta information 
 	lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+	# print(wildcards.sample)
 	if lib_type == "SE":
-		return([FASTQdir + "{sample}." + str(config["fqsuffix"]) + ".gz"])
+		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqsuffix"]) + ".gz"])
 
 	if lib_type == "PE":
-		return([FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
-				FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"])
+		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+				FASTQdir + f"{wildcards.sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"])
+		
 	
 	raise(ValueError("Unrecognized library type value: %s" % wildcards.sample))
 
@@ -47,10 +49,12 @@ rule STAR:
 		"""
 rule STAR_INDEX:
 		input:
-			rules.STAR.output.bam
+			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
 		output:
 			bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
+		params:
+			samtools = config['soft']['samtools']
 		shell:
 			"""
-			samtools index {input}
+			{params.samtools} index {input}
 			"""
