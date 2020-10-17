@@ -14,4 +14,4 @@ Including:
 
 - SpaISO-Seq
 
-All pipeline have been tested which snakemake (5.26.1)
+All pipeline have been tested with snakemake (5.26.1)
