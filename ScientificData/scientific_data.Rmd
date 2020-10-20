@@ -1,0 +1,899 @@
+---
+title: "ScientificData"
+author: "zhouran"
+date: "2020/9/15"
+output: html_document
+---
+
+
+```{r echo=F}
+
+suppressMessages(library(dplyr))
+suppressMessages(library(formattable))
+suppressMessages(library(ggplot2))
+suppressMessages(library(gridExtra))
+suppressMessages(library(grid))
+suppressMessages(library(gtable))
+
+```
+
+## STAR information
+
+```{r}
+dir.create('cache', showWarnings = F)
+
+
+star_df <-
+  read.table(
+    "/mnt/data8/zhouran/proj/2019-10-15-NSC/data/scientific_data/prepare_data/data/STAR/multiqc_data/multiqc_star.txt",
+    stringsAsFactors = F,
+    header = T
+  )
+
+star_df %>%
+  select(Sample,
+         total_reads,
+         uniquely_mapped_percent,
+         avg_mapped_read_length) %>%
+  mutate(total_reads = round(total_reads / 1e6, 1)) -> star_df_use
+
+```
+
+## fastqc information
+
+```{r}
+fastqc <-
+  read.table(
+    '/mnt/data8/zhouran/proj/2019-10-15-NSC/data/scientific_data/prepare_data/data/fastqc_raw/multiqc_data/multiqc_fastqc.txt',
+    stringsAsFactors = F,
+    header = T,
+    sep = '\t'
+  )
+fastqc$label <- gsub('_R1|_R2', '', fastqc$Sample)
+
+gc_mean <- lapply(split(fastqc$X.GC, fastqc$label), mean)
+total.seq <- lapply(split(fastqc$Total.Sequences, fastqc$label), mean)
+
+```
+
+## Q30 data
+
+```{r}
+q30 <- read.table('cache/q30.txt', stringsAsFactors = F)
+
+q30$label <- gsub('_R1.txt|_R2.txt', '', q30$V1)
+
+q30_mean <- lapply(split(q30$V2, q30$label), mean)
+
+```
+
+## TIN val
+
+```{r}
+tin_val <- read.table('cache/TIN_summary.txt', stringsAsFactors = F)
+colnames(tin_val) <- c('label', 'mean', 'median', 'stdev')
+tin_val$label <-
+  sapply(strsplit(tin_val$label, split = '[.]'), '[[', 1)
+
+```
+
+## meta information
+```{r}
+
+meta <-
+  read.table(
+    'prepare_data/meta.tsv',
+    stringsAsFactors = F,
+    sep = '\t',
+    header = T
+  )
+
+
+```
+
+```{r}
+star_df_use$GC <- plyr::mapvalues(
+  from = names(gc_mean),
+  to = unname(unlist(gc_mean)),
+  x = star_df_use$Sample
+)
+
+star_df_use$genotype <- plyr::mapvalues(
+  from = meta$SampleLabel,
+  to = meta$Mutant_type,
+  x = star_df_use$Sample
+)
+
+star_df_use$stage <- plyr::mapvalues(
+  from = meta$SampleLabel,
+  to = meta$Stage,
+  x = star_df_use$Sample
+)
+
+star_df_use$q30 <- plyr::mapvalues(
+  from = names(q30_mean),
+  to = unname(unlist(q30_mean)),
+  x = star_df_use$Sample
+)
+
+
+star_df_use[['cell_purity']] <- "NA"
+star_df_use[['RIN']] <- "NA"
+star_df_use[['TIN']] <- "NA"
+star_df_use <- readRDS('cache/star_df_use.Rds')
+star_df_use$q30 <- plyr::mapvalues(
+  from = names(q30_mean),
+  to = unname(unlist(q30_mean)),
+  x = star_df_use$Sample
+)
+
+star_df_use <- merge(star_df_use, tin_val, by.x='Sample', 'label')
+colnames(star_df_use)[2] <- 'clean_reads'
+
+star_df_use$total_reads <- as.numeric(plyr::mapvalues(
+  from = names(total.seq),
+  to = unname(unlist(total.seq)) / 1e6,
+  x = star_df_use$Sample
+))
+
+star_df_use$clean_rate <-
+  star_df_use$clean_reads / star_df_use$total_reads
+star_df_use <- star_df_use[, c(1, 15, 16, 2:14)]
+colnames(star_df_use)[14:16] <-
+  paste("TIN", colnames(star_df_use)[14:16], sep = '_')
+
+saveRDS(star_df_use, file = glue::glue('cache/star_df_use.Rds'))
+
+write.table(
+  star_df_use,
+  sep = '\t',
+  file = glue::glue('cache/star_df_use.tsv'),
+  row.names = F,
+  quote = F
+)
+
+# p <- tableGrob(star_df_use, theme = ttheme_minimal())
+# p$heights <- unit(rep(1 / nrow(p), nrow(p)), "npc")
+# p <- gtable_add_grob(
+#   p,
+#   grobs = rectGrob(gp = gpar(fill = NA, lwd = 2)),
+#   t = 2,
+#   b = nrow(p),
+#   l = 1,
+#   r = ncol(p)
+# )
+# 
+# p <- gtable_add_grob(
+#   p,
+#   grobs = rectGrob(gp = gpar(fill = NA, lwd = 2)),
+#   t = 1,
+#   l = 1,
+#   r = ncol(p)
+# )
+
+# pdf('test.pdf', 8, 12)
+# grid.arrange(p)
+# dev.off()
+
+
+
+```
+
+### Final sample table output
+
+```{r}
+
+star_df_use <- readRDS('cache/star_df_use.Rds')
+sample_use <- read.table('cache/sample_use.txt', stringsAsFactors = F)
+
+all(sample_use$V1 %in% star_df_use$Sample)
+
+star_df_use <- star_df_use[star_df_use$Sample %in% sample_use$V1,]
+star_df_use$total_reads <- round(star_df_use$total_reads, 1)
+star_df_use$clean_rate <- round(star_df_use$clean_rate, 3)
+write.table(
+  star_df_use,
+  sep = '\t',
+  file = glue::glue('final/star_df_use.tsv'),
+  row.names = F,
+  quote = F
+)
+
+```
+
+## base QC information
+
+```{r}
+
+dat <- readRDS('prepare_data/data/fastqc_raw/fastqc.Rds')
+
+mtx <- do.call(rbind, lapply(names(dat), function(x) {
+  # x <- names(dat)[1]
+  mtx <- dat[[x]]
+  mtx$pair <- x
+  mtx$label <- gsub('_R1|_R2', '', x)
+  mtx <- mtx[, c('Base', 'Mean', 'pair', 'label')]
+  return(mtx)
+}))
+
+mtx %>% group_by(label, Base) %>% mutate(MeanQual = mean(Mean)) -> mtx
+
+mtx$stage <- plyr::mapvalues(from = meta$SampleLabel,
+                             to = meta$Stage,
+                             x = mtx$label)
+mtx$genotype <- plyr::mapvalues(
+  from = meta$SampleLabel,
+  to = meta$Mutant_type,
+  x = mtx$label
+)
+mtx$Base <- factor(mtx$Base, levels = dat[[1]]$Base)
+mtx <- mtx[mtx$label %in% sample_use$V1,]
+mtx$stage <- factor(mtx$stage,
+                    levels = c("E15.5", "E17.5", "P1.5", "P8", "P60"))
+
+require(ggplot2)
+p <- ggplot(mtx, aes(
+  x = Base,
+  y = MeanQual,
+  color=stage
+  # group = genotype
+)) +
+  geom_rect(xmin=0.5, xmax=40, ymin=28, ymax=41, fill='#afe6af', color=NA, alpha=0.1) +
+  # geom_rect(xmin=1, xmax=38, ymin=20, ymax=28, fill='#e6d7af', color=NA, alpha=0.1) +
+  stat_boxplot(geom = "errorbar",width=0.8)+
+  geom_boxplot(width=0.8,outlier.shape=NA)+
+  labs(title="Per Base Mean Sequence Quality", x="Position (bp)", y = "Mean Sequence Quality (Phred Score)")+
+  theme_classic() + 
+  # scale_color_manual(values=c("#00AFBB", "#E7B800"))+
+  #scale_y_continuous(breaks=c(0,10,20,30,40),labels=c("0","10","20","30","40"))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),legend.text=element_text(size=10),
+        legend.title= element_blank())+
+  expand_limits(y=c(0,41))+scale_y_continuous(expand = c(0,0))
+
+# p <- p + facet_grid( ~ genotype)
+
+ggsave(
+  plot = p,
+  filename = 'final/qual_boxplot.pdf',
+  width = 6,
+  height = 4
+)
+
+```
+
+
+## rseqc information
+
+```{r}
+require(data.table)
+RSeqc_summary <- function(column=c(1,2),pattern=".UTR.txt",by="Group"){
+  filenames2 <- list.files("/mnt/data8/zhouran/proj/2019-10-15-NSC/data/scientific_data/prepare_data/data/rseqc/", pattern = pattern)
+  filenames2 <- paste0("/mnt/data8/zhouran/proj/2019-10-15-NSC/data/scientific_data/prepare_data/data/rseqc/",filenames2)
+  RSeqc_file <-lapply(filenames2,function(x){
+    tmp <-fread(x,select=column)
+    colnames(tmp)[2] <- strsplit(tail(strsplit(x, "/")[[1]], n = 1),"[.]")[[1]][1]
+    return(tmp)
+  })
+  Reduce(function(x, y) {merge(x, y, all = T, by = by)}, RSeqc_file) 
+}
+
+RSeqc_file_totalbases <- RSeqc_summary(column=c(1,2))
+RSeqc_file_Tag_count <- RSeqc_summary(column=c(1,3))
+RSeqc_file_TagsperKb <- RSeqc_summary(column=c(1,4))
+
+Tag_count <- melt(RSeqc_file_Tag_count)
+Tag_count$stage <- plyr::mapvalues(
+  from = meta$SampleLabel,
+  to = meta$Stage,
+  x = Tag_count$variable
+)
+Tag_count$genotype <- plyr::mapvalues(
+  from = meta$SampleLabel,
+  to = meta$Mutant_type,
+  x = Tag_count$variable
+)
+Tag_count <- Tag_count[Tag_count$variable %in% sample_use$V1, ]
+
+Tag_count2 <-
+  Tag_count[, .(percentage = value * 100 / sum(value)), by = variable]
+Tag_count$percentage <-Tag_count2$percentage
+# Tag_count$Library <-rep(rep(c("polyARNA","totalRNA"),each=6),40)
+df <- Tag_count[,.(mean = mean(percentage),sd=sd(percentage)),by=.(Group,genotype,stage)]
+
+p <- ggplot(df, aes(x=Group, y=mean, color=stage, fill=stage)) + 
+  geom_bar(stat="identity", color="black", 
+           position=position_dodge()) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), 
+                color='black',
+                width=.2,
+                position=position_dodge(.9))+
+  labs(y = "Frequency (%)")+
+  theme_classic() +
+  # scale_fill_manual(values=c("#00AFBB", "#E7B800"))+
+  theme(axis.title = element_text(size = 16),
+        axis.title.x=element_blank(),
+        axis.text = element_text(size = 12), 
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.text=element_text(size=10),
+        legend.title= element_blank())
+
+# p <- p + facet_grid(~ genotype)
+
+ggsave(
+  plot = p,
+  filename = 'final/annotation_distribution.pdf',
+  # width = 12,
+  width = 6,
+  height = 4
+)
+
+
+```
+
+```{r}
+file_list <-
+  list.files("prepare_data/data/genebody/",
+             pattern = "geneBodyCoverage.txt",
+             full.names = T)
+
+
+data <- lapply(file_list,function(x){
+  tab <- fread(x,sep = '\t', header = F)
+  tab <- tab[2,]
+})
+
+geneBodyCoverage <- do.call(rbind,data)
+geneBodyCoverage2<- apply(geneBodyCoverage[,-1],1,function(x){
+  (x - min(x)) / (max(x) - min(x))   ## txt files  (i - min(dat)) / (max(dat) - min(dat))
+})
+colnames(geneBodyCoverage2)<- do.call(rbind, strsplit(geneBodyCoverage$V1,split="[.]"))[,1]
+geneBodyCoverage2 <- cbind(geneBodyCoverage2,percent=1:100)
+geneBodyCoverage2 <- melt(geneBodyCoverage2,id.var="percent")
+# geneBodyCoverage2 <- geneBodyCoverage2[-(8001:8100),]
+geneBodyCoverage2$Var1<-rep(1:100,length(unique(geneBodyCoverage2$Var2)))
+geneBodyCoverage2 <-
+  geneBodyCoverage2[geneBodyCoverage2$Var2 != 'percent', ]
+geneBodyCoverage2$Stage <- plyr::mapvalues(from = meta$SampleLabel,
+                                           to = meta$Stage,
+                                           x = geneBodyCoverage2$Var2)
+
+geneBodyCoverage2$Genotype <-
+  plyr::mapvalues(
+    from = meta$SampleLabel,
+    to = meta$Mutant_type,
+    x = geneBodyCoverage2$Var2
+  )
+
+geneBodyCoverage2 <- geneBodyCoverage2[geneBodyCoverage2$Var2 %in% sample_use$V1,]
+p <-
+  ggplot(geneBodyCoverage2,
+         aes(
+           x = Var1,
+           y = value,
+           group = Var2,
+           colour = Stage
+         )) + geom_line() +
+  theme(
+    panel.background = element_blank(),
+    axis.title = element_text(size = 11),
+    axis.text = element_text(size = 10),
+    axis.line = element_line(),
+    title = element_text(
+      size = 15,
+      hjust = .5,
+      vjust = .5
+    ),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+    # legend.position = "none"
+  ) +
+  # scale_colour_manual(values = c("#00AFBB", "#E7B800")) +
+  labs(x = "Gene body percentile (5'->3')", y = "Coverage", title =
+         "Gene body coverage")
+# p <- p + facet_grid(~ Genotype)
+
+ggsave(
+  plot = p,
+  filename = 'final/genebody_cov.pdf',
+  # width = 12,
+  width = 6,
+  height = 4
+)
+
+
+```
+
+## expression quality analysis
+
+```{r}
+require(DESeq2)
+preparedds <- function(obj, rowSum = 0) {
+
+  # filter rowSum
+  obj <- obj[rowSums(assay(obj)) > rowSum, ]
+  
+  dds <- DESeqDataSet(obj, design = ~ condition)
+  dds <- estimateSizeFactors(dds)
+  dds <- DESeq(dds)
+
+  return(dds)
+}
+
+
+if (isFALSE(file.exists('final/DESeq_data.RData'))) {
+  dat <-
+    readRDS(
+      '/mnt/data8/zhouran/proj/2019-10-15-NSC/data/DEG/0.data_ingest/SMARTseq2_neuro_SVZ.rawCounts.Rds'
+    )
+  
+  # all(sample_use$V1 %in% colnames(dat))
+  
+  dat <- dat[, sample_use$V1]
+  dat$condition <- as.factor(dat$condition)
+  
+  dat <- preparedds(dat)
+  
+  vsd <- vst(dat, blind = FALSE)
+  rld <- rlog(dat, blind = FALSE)
+  colData(dat)$Stage <- factor(colData(dat)$Stage,
+                               levels = c("E15.5", "E17.5", "P1.5", "P8", "P60"))
+  dat <- dat[, order(colData(dat)$Stage)]
+  
+  
+  colData(rld)$Stage <- factor(colData(rld)$Stage,
+                               levels = c("E15.5", "E17.5", "P1.5", "P8", "P60"))
+  rld <- rld[, order(colData(rld)$Stage)]
+  
+  
+  colData(vsd)$Stage <- factor(colData(vsd)$Stage,
+                               levels = c("E15.5", "E17.5", "P1.5", "P8", "P60"))
+  vsd <- vsd[, order(colData(vsd)$Stage)]
+
+  save(dat, vsd, rld, file = 'final/DESeq_data.RData')
+} else {
+  load('final/DESeq_data.RData')
+}
+
+```
+
+### cook's distance
+
+```{r}
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  colors <- hcl(h = hues, l = 65, c = 100)[1:n]
+  colors
+}
+
+cooks_dat <- log10(assays(dat)[["cooks"]])
+
+
+pos_1 <- table(colData(dat)[colnames(cooks_dat), 'Stage'])
+
+offset <- c(0, cumsum(pos_1)[-length(pos_1)]) + c(0:(length(pos_1) - 1))
+
+x_ind <- unlist(lapply(1:length(pos_1), function(x) {
+  1:pos_1[x] + offset[x]
+}))
+
+
+col <- gg_color_hue(length(pos_1))
+col <- rep(col, pos_1)
+
+pdf('final/cooks_dis.pdf', 8, 4)
+boxplot(
+  cooks_dat,
+  at = x_ind,
+  range = 0,
+  col = col,
+  las = 2,
+  frame = F,
+  ylab = "Cook's distance"
+)
+dev.off()
+
+
+```
+
+### PCA
+
+```{r}
+PCAplot <- function(obj, color, shape, label, top_n = 500) {
+  # calculating Vars and select top
+  require("factoextra")
+  require("FactoMineR")
+
+  if (!is.null(top_n)) {
+    rv <- rowVars(assay(obj))
+    select <-
+      order(rv, decreasing = TRUE)[seq_len(min(top_n, length(rv)))]
+    
+    # PCA
+    res.pca_topn <- PCA(t(assay(obj)[select, ]),  graph = F)
+  } else{
+    top_n <- "ALL"
+    res.pca_topn <- PCA(t(assay(obj)),  graph = F)
+  }
+  
+  sampleinfo <- as.data.frame(colData(obj))
+  ind <- get_pca_ind(res.pca_topn)
+  pc1 <- ind$coord
+  df_topn <- merge(pc1, sampleinfo, by = 'row.names')
+  
+  p <-
+    ggplot(df_topn, aes_string(x = 'Dim.1', y = 'Dim.2', color = color)) +
+    geom_point(aes_string(shape = shape)) +
+    ggtitle(glue::glue("{top_n} genes")) +
+    xlab(paste0("PC1", ":", round(res.pca_topn$eig[1, 2], 2), "%")) +
+    ylab(paste0("PC2", ":", round(res.pca_topn$eig[2, 2], 2), "%")) +
+     ggrepel::geom_label_repel(
+      aes_string(label = label),
+      box.padding   = 0.35,
+      point.padding = 0.5,
+      segment.color = 'grey50'
+    ) + theme(legend.position = "None")
+  return(p)
+}
+
+p1 <- PCAplot(rld,
+              "Stage",
+              "Mutant_type",
+              "SampleLabel",
+              top_n = 500)
+p1 <- p1 + theme(
+    panel.background = element_blank(),
+    axis.title = element_text(size = 11),
+    axis.text = element_text(size = 10),
+    axis.line = element_line(),
+    title = element_text(
+      size = 15,
+      hjust = .5,
+      vjust = .5
+    ),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+    # legend.position = "none"
+  )
+
+p2 <- PCAplot(rld,
+              "Stage",
+              "Mutant_type",
+              "SampleLabel",
+              top_n = "ALL")
+p2 <- p2 + theme(
+  panel.background = element_blank(),
+  axis.title = element_text(size = 11),
+  axis.text = element_text(size = 10),
+  axis.line = element_line(),
+  title = element_text(
+    size = 15,
+    hjust = .5,
+    vjust = .5
+  ),
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)
+  # legend.position = "none"
+)
+p3 <- plotPCA(rld, intgroup='Stage')
+
+p3 <- p3 + theme(
+  panel.background = element_blank(),
+  axis.title = element_text(size = 11),
+  axis.text = element_text(size = 10),
+  axis.line = element_line(),
+  title = element_text(
+    size = 15,
+    hjust = .5,
+    vjust = .5
+  ),
+  plot.title = element_text(hjust = 0.5),
+  plot.subtitle = element_text(hjust = 0.5)
+  # legend.position = "none"
+)
+
+pdf('final/pca_plot.pdf', 4.5, 4)
+p1
+p3
+p2
+dev.off()
+
+
+```
+
+### distance
+
+```{r}
+distPlot <- function(obj, annotationVector,annot_colos=NULL, main = "") {
+  require(RColorBrewer)
+  require(pheatmap)
+  sampleDists <- dist(t(assay(obj)))
+  sampleDistMatrix <- as.matrix(sampleDists)
+  rownames(sampleDistMatrix) <- rownames(colData(obj))
+  colnames(sampleDistMatrix) <- NULL
+  colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+
+  p <- pheatmap(
+    sampleDistMatrix,
+    clustering_distance_rows = sampleDists,
+    clustering_distance_cols = sampleDists,
+    main = main,
+    annotation_colors = annot_colos,
+    annotation_row = as.data.frame(colData(obj)[annotationVector]),
+    col = colors,
+    silent = TRUE
+  )
+  return(p)
+}
+
+stage_col <- gg_color_hue(length(unique(colData(vsd)[['Stage']])))
+names(stage_col) <- unique(colData(vsd)[['Stage']])
+annot_col <- list(
+  Stage = stage_col
+)
+p <- distPlot(vsd, annotationVector ="Stage", annot_colos = annot_col)
+
+pdf('final/distance.pdf', 7, 6)
+p
+dev.off()
+
+```
+
+
+### LRT
+
+```{r}
+require(tibble)
+
+dds_wald <- DESeq(dat)
+# res = results(dds_wald, contrast = c('condition', "P60_Control", "E15.5_Control"))
+# 
+label_use <- levels(dds_wald$condition)
+
+gene_use <- lapply(label_use[-1], function(label) {
+  res <-
+    results(dds_wald, contrast = c('condition', label, label_use[1]))
+  as.data.frame(res) %>% filter(padj < 0.01) -> res_filter
+  res_filter <- res_filter[abs(res_filter$log2FoldChange) > 1.5, ]
+  
+  rownames(res_filter)
+})
+gene_use <- unique(unlist(gene_use))
+
+normalized_counts <- counts(dat, normalize = T) %>%
+  data.frame() %>%
+  rownames_to_column(var = "gene") %>%
+  as_tibble()
+
+norm_OEsig <- normalized_counts %>%
+  filter(gene %in% gene_use) %>%
+  data.frame() %>%
+  column_to_rownames(var = "gene")
+
+```
+
+
+```{r}
+norm_OEsig_mean <- lapply(split(colnames(dat), dat$Stage),function(x){
+  rowMeans(norm_OEsig[, x])
+})
+norm_OEsig_mean <- do.call(cbind, norm_OEsig_mean)
+```
+
+```{r}
+sort_dat_de <- function(dat) {
+  if (all(apply(dat, 2, is.numeric))) {
+    maxindex <- apply(dat, 1, which.max)
+    new_dat <- list()
+    for (i in sort(maxindex)) {
+      a <- dat[maxindex == i,]
+      a <- a[order(-a[, i]), ]
+      new_dat[[i]] <- a
+    }
+    new_dat <- do.call(rbind, new_dat)
+    return(list(dat = new_dat, index = maxindex))
+  } else {
+    stop("dat must be numeric!")
+  }
+}
+
+dat <- sort_dat_de(t(scale(t(norm_OEsig_mean[ind, ]))))
+
+pdf('final/stage_specific_gene.pdf', 4, 5)
+ComplexHeatmap::Heatmap(
+  dat$dat,
+  cluster_columns = F,
+  cluster_rows = F,
+  show_row_names = F,
+  col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
+  name = 'Z-score'
+)
+dev.off()
+
+saveRDS(dat, file = 'final/stage_specific.Rds')
+
+```
+
+### stage specific enrichment
+
+```{r}
+stage_gene <- split(names(dat$index),unname(dat$index))
+names(stage_gene) <- colnames(dat$dat)
+require(clusterProfiler)
+require(org.Mm.eg.db)
+
+
+stag_go <-
+  compareCluster(
+    geneCluster = stage_gene,
+    fun = "enrichGO",
+    OrgDb = 'org.Mm.eg.db',
+    keyType = 'ENSEMBL',
+    ont = "BP"
+  )
+saveRDS(stag_go, file = 'final/stage_go.Rds')
+
+pdf('final/stage_go.pdf', 8, 4)
+dotplot(stag_go)
+dev.off()
+
+
+stage_gene_entriz <- lapply(stage_gene,function(x){
+  bitr(x,
+     from = 'ENSEMBL',
+     to = 'ENTREZID',
+     OrgDb = org.Mm.eg.db)[['ENTREZID']]
+})
+  
+stage_kegg <-
+  compareCluster(
+    geneCluster = stage_gene_entriz,
+    fun = "enrichKEGG",
+    organism='mmu')
+
+saveRDS(stage_kegg, file = 'final/stage_kegg.Rds')
+
+pdf('final/stage_kegg.pdf', 8, 4)
+dotplot(stage_kegg)
+dev.off()
+
+
+
+```
+
+
+### well-known stage specific genes 
+
+
+```{r}
+lineage_marker <- readRDS('final/lineage_marker.Rds')
+lineage_marker_ensembl <- lapply(lineage_marker, function(x) {
+  bitr(x,
+       from = 'SYMBOL',
+       to = 'ENSEMBL',
+       OrgDb = org.Mm.eg.db)
+})
+
+## gene reorder
+
+lineage_marker_ensembl <-
+  lapply(lineage_marker_ensembl, function(x) {
+    # x <- lineage_marker_ensembl[[1]]
+    
+    id_use <- intersect(rownames(norm_OEsig), x$ENSEMBL)
+    tmp <- sort_dat_de(norm_OEsig[id_use,])
+    x <- x[match(rownames(tmp$dat), x$ENSEMBL), ]
+    return(x)
+  })
+
+## annotation
+lineages_label <-
+  rep(names(lineage_marker_ensembl), unlist(lapply(lineage_marker_ensembl, function(x) {
+    dim(x)[1]
+  })))
+lineage_col <- gg_color_hue(length(lineage_marker_ensembl))
+lineage_col <- lineage_col[sample(length(lineage_col))]
+names(lineage_col) <- names(lineage_marker_ensembl)
+
+annotation_row <-
+  ComplexHeatmap::rowAnnotation(lineage = lineages_label,
+                                col = list(lineage = lineage_col))
+rownames(meta) <- meta$SampleLabel
+
+annotation_col <-
+  ComplexHeatmap::columnAnnotation(stage = meta[colnames(normalized_counts)[-1],'Stage'],
+                                   col = list(stage = stage_col))
+
+mtx_to_plot <-
+  t(scale(t(norm_OEsig[unlist(lapply(lineage_marker_ensembl, function(x) {
+    x$ENSEMBL
+  })),])))
+
+rownames(mtx_to_plot) <-
+  unlist(lapply(lineage_marker_ensembl, function(x) {
+    x$SYMBOL
+  }))
+
+p <- ComplexHeatmap::Heatmap(
+  mtx_to_plot,
+  cluster_columns = F,
+  cluster_rows = F,
+  show_row_names = T,
+  left_annotation = annotation_row,
+  top_annotation = annotation_col,
+  col = circlize::colorRamp2(c(-1, 0, 1), c("blue", "white", "red")),
+  name = 'Z-score',
+  row_names_gp = gpar(fontsize = 2),
+)
+
+pdf('final/Lineage_gene.pdf')
+p
+dev.off()
+
+```
+
+```{r}
+
+single_gene_lst <- list(
+  OPC = c("Olig1",
+          "Olig2",
+          "Zfp36l1"),
+  Astrocyte = c("Gja1",
+                "Aldoc",
+                "Aqp4"),
+  NB = c("Cd24a",
+         "Dlx2",
+         "Sp9")
+)
+single_gene_lst_ensembl <- lapply(single_gene_lst, function(x) {
+  bitr(x,
+       from = 'SYMBOL',
+       to = 'ENSEMBL',
+       OrgDb = org.Mm.eg.db)
+})
+
+single_gene_lst_ensembl <- do.call(rbind, single_gene_lst_ensembl)
+# single_gene_lst_ensembl <-
+#   split(single_gene_lst_ensembl$SYMBOL,
+#         single_gene_lst_ensembl$ENSEMBL)
+
+p_lst <- lapply(1:dim(single_gene_lst_ensembl)[1], function(x) {
+
+  plot_count <-
+    DESeq2::plotCounts(
+      dat,
+      gene = single_gene_lst_ensembl$ENSEMBL[x],
+      intgroup = c("Stage"),
+      returnData = T
+    )
+  
+  
+  p <- ggplot(plot_count, aes(x = Stage,
+                              y = count,
+                              fill = Stage)) +
+    geom_boxplot() +
+    geom_point(
+      alpha = 0.4,
+      size = 1,
+      position = position_jitterdodge(dodge.width = 0.9)
+    ) +
+    scale_y_log10() +
+    ylab('Normalized counts') +
+    ggtitle(single_gene_lst_ensembl$SYMBOL[x]) + theme_bw()
+  p
+})
+
+pdf('final/Lineage_gene.single.pdf', 4.5, 3.5)
+p_lst
+dev.off()
+
+library(patchwork)
+p <- Reduce(`+`, p_lst) + plot_layout(guides = "collect") 
+
+pdf('final/Lineage_gene.merge.pdf', 10, 8)
+p
+dev.off()
+
+```
+
+
+

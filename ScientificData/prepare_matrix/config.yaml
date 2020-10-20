@@ -17,3 +17,4 @@ soft:
  read_dist: /home/zhouran/data/anaconda3/envs/npm/bin/read_distribution.py
  genebody: /home/zhouran/data/anaconda3/bin/geneBody_coverage.py
  FastQC: /home/zhouran/data/anaconda3/bin/fastqc
+ tin: /home/zhouran/data/anaconda3/envs/npm/bin/tin.py
