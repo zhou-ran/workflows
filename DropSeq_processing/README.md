@@ -1,13 +1,15 @@
 
 # DropSeq pipeline
 
-All analysis pipeline was based the snakemake
+All analysis pipeline was based the snakemake.
 
+How to run:
 ```shell
 
 snakemake -s Snakefile.smk
 
 ```
+
 ## Prepare
 
 ### 1. sample information

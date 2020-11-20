@@ -27,12 +27,13 @@ rule fq2bam:
 
 	params:
 		tmpdir = config["tmpdir"],
-		picard = config["soft"]["picard"]
+		picard = config["soft"]["picard"],
+		java = config["soft"]["java"]
 
 	shell:
 		"""
 
-		java -Djava.io.tmpdir={params.tmpdir} -Xmx20G -jar\
+		{params.java} -Djava.io.tmpdir={params.tmpdir} -Xmx20G -jar\
 				{params.picard} FastqToSam \
 				F1={input[0]} F2={input[1]} SM=DS O={output} > {log}
 
