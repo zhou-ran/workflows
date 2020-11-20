@@ -1,0 +1,116 @@
+
+def star_func(wildcards):
+	# fetch the library type from the meta information 
+	lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+	# print(wildcards.sample)
+	if lib_type == "SE":
+		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqsuffix"]) + ".gz"])
+
+	if lib_type == "PE":
+		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+				FASTQdir + f"{wildcards.sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"])
+		
+	
+	raise(ValueError("Unrecognized library type value: %s" % wildcards.sample))
+
+rule fq2bam:
+	input:
+		star_func
+
+	output:
+		temp(
+			output_dir + "align/{sample}/{sample}.bam"
+			)
+
+	log:
+		output_dir + "align/{sample}/{sample}.fqToBam.log"
+
+	params:
+		tmpdir = config["tmpdir"],
+		picard = config["soft"]["picard"]
+
+	shell:
+		"""
+
+		java -Djava.io.tmpdir={params.tmpdir} -Xmx20G -jar\
+				{params.picard} FastqToSam \
+				F1={input[0]} F2={input[1]} SM=DS O={output} > {log}
+
+		"""
+
+rule addBarcode:
+	input:
+		rules.fq2bam.output
+
+	output:
+		temp(
+			output_dir + "align/{sample}/{sample}.barcode.bam"
+			)
+	
+	log:
+		output_dir + "align/{sample}/{sample}.barcode.log"
+
+	params:
+		droptools = config['soft']['droptools'],
+		barcode = config['barcode'],
+		umi = config['umi']
+
+	shell:
+		"""
+		{params.droptools} TagBamWithReadSequenceExtended SUMMARY={log} \
+		BASE_RANGE={params.barcode} DISCARD_READ=false BARCODED_READ=1 \
+		TAG_NAME=CB NUM_BASES_BELOW_QUALITY=10 INPUT={input} \
+		OUTPUT={output} TAG_BARCODED_READ=true
+
+		"""
+
+rule addToanother:
+	input:
+		rules.addBarcode.output
+
+	output:
+		temp(
+			output_dir + "align/{sample}/{sample}.barcode.dT.bam"
+			)
+
+	log:
+		output_dir + "align/{sample}/{sample}.addToanother.log"
+	
+	params:
+		python = config['soft']['python'],
+		mani = config['scripts']['mani_bam'],
+		last_pos = config['last_pos']
+
+	shell:
+		"""
+
+		{params.python} {params.mani} -i {input} -o {output} -b {params.last_pos}
+
+		"""
+
+rule addUMI:
+	input:
+		rules.addToanother.output
+
+	output:
+		temp(
+			output_dir + "align/{sample}/{sample}.barcode.UMI.bam"
+			)
+	log:
+		output_dir + "align/{sample}/{sample}.UMI.log"
+
+	params:
+		droptools = config['soft']['droptools'],
+		barcode = config['barcode'],
+		umi = config['umi']
+
+	shell:
+		"""
+		{params.droptools}/TagBamWithReadSequenceExtended SUMMARY={log} \
+		BASE_RANGE={params.umi} DISCARD_READ=True BARCODED_READ=1 TAG_NAME=UB \
+		NUM_BASES_BELOW_QUALITY=10 INPUT={input} \
+		OUTPUT={output} TAG_BARCODED_READ=true
+		"""
+
+
+

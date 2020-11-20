@@ -1,0 +1,82 @@
+rule SamToFastq_align:
+	input:
+		rules.addUMI.output
+
+	output:
+		temp(
+		output_dir + "align/{sample}/STAR/{sample}.Aligned.sortedByCoord.out.bam"
+		)
+
+	log:
+		output_dir + 'align/{sample}/{sample}.SamToFastq.log'
+
+	params:
+		out_prefix = output_dir + 'align/{sample}/STAR/{sample}.',
+		gtf = config['gtf'],
+		index = config['STAR']['index'],
+		cores = config['STAR']['cores'],
+		tmpdir = config['tmpdir'],
+		java = config['soft']['java'],
+		picard = config['soft']['picard']
+
+	shell:
+		"""
+		{params.java} -Djava.io.tmpdir={params.tmpdir} \
+		-Xmx20G -jar {params.picard} SamToFastq \
+		INPUT={input} FASTQ=/dev/stdout | STAR \
+		--genomeDir {params.index} \
+		--alignMatesGapMax 5000 --runThreadN {params.cores} \
+		--outSAMtype BAM SortedByCoordinate \
+		--outSAMattributes All \
+		--readFilesIn /dev/stdin\
+		--sjdbGTFfile {params.gtf}\
+		--outFileNamePrefix {params.out_prefix} \
+		--outFilterScoreMinOverLread 0.4 \
+		--outFilterMatchNminOverLread 0.4 \
+		--limitBAMsortRAM 70000000000
+		"""
+
+
+rule MergeBam:
+	input:
+		rules.addUMI.output, 
+		rules.SamToFastq_align.output
+
+	output:
+		bam = output_dir + "align/{sample}/{sample}.merge.bam"
+
+	params:
+		java = config['soft']['java'],
+		tmpdir = config['tmpdir'],
+		picard = config['soft']['picard'],
+		genome = config['fa']
+
+	log:
+		output_dir + "align/{sample}/{sample}.MergeBam.log"
+
+	shell:
+		"""
+		{params.java} -Djava.io.tmpdir={params.tmpdir} \
+		-Xmx20G -jar {params.picard} \
+		MergeBamAlignment REFERENCE_SEQUENCE={params.genome} \
+		UNMAPPED_BAM={input[0]} \
+		ALIGNED_BAM={input[1]} \
+		INCLUDE_SECONDARY_ALIGNMENTS=false OUTPUT={output.bam} 2>{log}
+		"""
+
+rule indexbam:
+	input:
+		rules.MergeBam.output.bam
+
+	output:
+		rules.MergeBam.output.bam + ".bai"
+
+	params:
+		samtools = config['soft']['samtools']
+
+	shell:
+		"""
+
+		{params.samtools} index {input}
+
+		"""

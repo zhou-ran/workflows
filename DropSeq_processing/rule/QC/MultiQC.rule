@@ -1,0 +1,27 @@
+def multiqc_input(wildcards):
+	input = []
+	input.extend(expand(output_dir + "FastQC/{sample}" + "_fastqc.zip", sample = samples.names[samples.type == 'SE'].values.tolist()),)
+	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	input.extend(expand(output_dir + "{sample}/scape/log/{sample}.done",sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	print(input)
+	return input
+
+## Determine the input directories for MultiQC depending on the config file
+def multiqc_params(wildcards):
+	param = [output_dir]
+	return param
+
+rule fastqcMultiQC:
+	input:
+		multiqc_input
+	output:
+		output_dir + "MultiQC/multiqc_report.html"
+	params:
+		search_dir = multiqc_params,
+		multiout_dir = output_dir + "MultiQC/",
+		multiqc = config["soft"]["multiqc"]
+	shell:
+		"""
+		{params.multiqc} {params.search_dir} -f -o {params.multiout_dir}
+		"""

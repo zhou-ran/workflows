@@ -1,0 +1,44 @@
+def cb_func(wildcards):
+    cb_file = samples.cb[samples.names == wildcards.sample].values.tolist()[0]
+    return cb_file
+
+rule scape:
+	input:
+		bai = rules.indexbam.output,
+		bam = rules.MergeBam.output
+
+	output:
+		output_dir + "{sample}/scape/log/{sample}.done"
+
+	params:
+		cb = cb_func,
+		output_prefix = output_dir + "{sample}/scape",
+		python = config['soft']['python'],
+		scape = config['soft']['scape'],
+		bed = config['scape']['bed'],
+		cores = config['scape']['cores']
+
+	log:
+		output_dir + '{sample}/scape/{sample}.log'
+
+	shell:
+		"""
+
+		{params.python} {params.scape} apamix \
+		--bed {params.bed} \
+		--bam {input.bam} \
+		--out {params.output_prefix} \
+		--cores {params.cores} \
+		--cb {params.cb} 2> {log} && echo "done" > {output}
+
+		"""
+
+rule final_job:
+    input:
+        expand(output_dir + "{sample}/scape/log/{sample}.done", sample = samples.names.values.tolist())
+    shell:
+        """
+
+        echo "well done"
+
+        """
