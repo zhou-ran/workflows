@@ -58,7 +58,7 @@ rule addBarcode:
 
 	shell:
 		"""
-		{params.droptools} TagBamWithReadSequenceExtended SUMMARY={log} \
+		{params.droptools}/TagBamWithReadSequenceExtended SUMMARY={log} \
 		BASE_RANGE={params.barcode} DISCARD_READ=false BARCODED_READ=1 \
 		TAG_NAME=CB NUM_BASES_BELOW_QUALITY=10 INPUT={input} \
 		OUTPUT={output} TAG_BARCODED_READ=true
