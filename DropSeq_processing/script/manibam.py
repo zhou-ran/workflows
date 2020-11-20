@@ -62,7 +62,7 @@ def main():
 
 		outbamfile.write(line)
 
-	samfile.close()
+	input_hd.close()
 	outbamfile.close()
 
 if __name__ == '__main__':

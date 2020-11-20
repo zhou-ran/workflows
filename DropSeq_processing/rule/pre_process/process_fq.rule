@@ -58,10 +58,11 @@ rule addBarcode:
 
 	shell:
 		"""
+
 		{params.droptools}/TagBamWithReadSequenceExtended SUMMARY={log} \
 		BASE_RANGE={params.barcode} DISCARD_READ=false BARCODED_READ=1 \
 		TAG_NAME=CB NUM_BASES_BELOW_QUALITY=10 INPUT={input} \
-		OUTPUT={output} TAG_BARCODED_READ=true
+		OUTPUT={output}
 
 		"""
 
@@ -107,10 +108,12 @@ rule addUMI:
 
 	shell:
 		"""
+
 		{params.droptools}/TagBamWithReadSequenceExtended SUMMARY={log} \
 		BASE_RANGE={params.umi} DISCARD_READ=True BARCODED_READ=1 TAG_NAME=UB \
 		NUM_BASES_BELOW_QUALITY=10 INPUT={input} \
-		OUTPUT={output} TAG_BARCODED_READ=true
+		OUTPUT={output}
+
 		"""
 
 

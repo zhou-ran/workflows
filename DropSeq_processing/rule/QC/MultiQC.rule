@@ -3,7 +3,7 @@ def multiqc_input(wildcards):
 	input.extend(expand(output_dir + "FastQC/{sample}" + "_fastqc.zip", sample = samples.names[samples.type == 'SE'].values.tolist()),)
 	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
 	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
-	input.extend(expand(output_dir + "{sample}/scape/log/{sample}.done",sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	input.extend(expand(output_dir + "scape/{sample}/log/{sample}.done",sample = samples.names[samples.type == 'PE'].values.tolist()),)
 	return input
 
 ## Determine the input directories for MultiQC depending on the config file
