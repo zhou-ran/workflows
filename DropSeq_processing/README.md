@@ -28,7 +28,7 @@ The fastq files were download from [CNP0000325](https://db.cngb.org/search/proje
 
 All config information was stored in `config.yaml`.
 including:
- - the format and location of fastq file format.
+ - The format and location of fastq file format.
  - The location and version of soft and script.
  - Genome, genome index and annotation files.
  - Output dir and temporary dir.
@@ -94,7 +94,7 @@ OUTPUT=sample_BC.bam
 # Add polyT length information into bam tags. 
 # The polyT length was used to infer the accurate polyadenylation sites.
 
-python manibam.py \
+python script/manibam.py \
 -i sample_BC.bam \
 -o sample_BC_dT.bam \
 -b 54
