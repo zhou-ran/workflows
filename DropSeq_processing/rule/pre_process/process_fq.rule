@@ -86,7 +86,8 @@ rule addToanother:
 	shell:
 		"""
 
-		{params.python} {params.mani} -i {input} -o {output} -b {params.last_pos}
+		{params.python} {params.mani} \
+		-i {input} -o {output} -b {params.last_pos}
 
 		"""
 
