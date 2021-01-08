@@ -1,0 +1,11 @@
+
+## soft
+##---------------------------------------------------------------------------------------------
+soft:
+  prefetch: /mnt/raid61/Personal_data/zhouran/soft/sratoolkit.2.9.6-1-centos_linux64/bin/prefetch
+  fq_dump: /mnt/raid61/Personal_data/zhouran/soft/sratoolkit.2.10.8-ubuntu64/bin/fastq-dump
+  ascp: /home/zhouran/.aspera/connect/bin/ascp|/home/zhouran/.aspera/connect/etc/asperaweb_id_dsa.openssh
+##---------------------------------------------------------------------------------------------
+
+output: fq
+metatxt: meta.tsv
