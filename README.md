@@ -16,7 +16,7 @@ Including:
 
 - [Scientific Data](https://github.com/zhou-ran/workflows/tree/master/ScientificData)
 
-- [DropSeq, Microwell-seq and 10X datasers for alternative polyadenylation](https://github.com/zhou-ran/workflows/tree/master/DropSeq_processing)
+- [DropSeq, Microwell-seq and 10X datasets for alternative polyadenylation](https://github.com/zhou-ran/workflows/tree/master/DropSeq_processing)
 
 
 All pipeline have been tested with snakemake (5.26.1)

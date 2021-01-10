@@ -1,3 +1,42 @@
+import os
+import sys
+import re
+import pandas as pd
+
+## Configuration file
+if len(config) == 0:
+	if os.path.isfile("./config.yaml"):
+		configfile: "./config.yaml"
+	else:
+		sys.exit("Make sure there is a config.yaml file in " + os.getcwd() + " or specify one with the --configfile commandline parameter.")
+
+## Read metadata
+if not os.path.isfile(config["metatxt"]):
+	sys.exit("Metadata file " + config["metatxt"] + " does not exist.")
+
+samples = pd.read_csv(config["metatxt"], sep='\t')
+
+try:
+	_ = samples.version
+except AttributeError:
+	print("There was no strand parameter, please add it")
+	sys.exit(0)
+
+## Sanitize provided input and output directories
+def getpath(str):
+	if str in ['', '.', './']:
+		return ''
+	if str.startswith('./'):
+		regex = re.compile('^\./?')
+		str = regex.sub('', str)
+	if not str.endswith('/'):
+		str += '/'
+	return str
+
+output_dir = getpath(config["output"])
+FASTQdir = getpath(config["FASTQ"])
+
+
 rule STARsolo:
 	"""
 	STARsolo to align single cell or single nuceli data
@@ -10,14 +49,14 @@ rule STARsolo:
 		gtf = config["genome"]["gtf"],
 		whitelist = config["barcode"]["whitelist"]
 	output: 
-		bam = "Result/STAR/{sample}/{sample}Aligned.sortedByCoord.out.bam",
-		bai = "Result/STAR/{sample}/{sample}Aligned.sortedByCoord.out.bam.bai",
-		rawmtx = "Result/STAR/{sample}/{sample}Solo.out/Gene/raw/matrix.mtx",
-		feature = "Result/STAR/{sample}/{sample}Solo.out/Gene/raw/features.tsv",
-		barcode = "Result/STAR/{sample}/{sample}Solo.out/Gene/raw/barcodes.tsv"
+		bam = output_dir + "STAR/{sample}/{sample}Aligned.sortedByCoord.out.bam",
+		bai = output_dir + "STAR/{sample}/{sample}Aligned.sortedByCoord.out.bam.bai",
+		rawmtx = output_dir + "STAR/{sample}/{sample}Solo.out/Gene/raw/matrix.mtx",
+		feature = output_dir + "STAR/{sample}/{sample}Solo.out/Gene/raw/features.tsv",
+		barcode = output_dir + "STAR/{sample}/{sample}Solo.out/Gene/raw/barcodes.tsv"
 	params:
 		star_custom = config.get("STARsolo_custom", ""),
-		outprefix = "Result/STAR/" + "{sample}/{sample}",
+		outprefix = output_dir +  "STAR/{sample}/{sample}",
 		transcript = lambda wildcards: ','.join(FILES[wildcards.sample]["R2"]),
 		barcode = lambda wildcards: ','.join(FILES[wildcards.sample]["R1"]),
 		barcodestart = config["barcode"]["barcodestart"],

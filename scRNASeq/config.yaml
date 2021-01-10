@@ -5,11 +5,14 @@ STAR:
   quant: '--soloFeatures Gene'
   index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
   gtf: /liulab/mtang/references/Refdata_scRNA_MAESTRO_GRCh38_1.1.0/genes.gtf
+
 #########################################
 
+output: data
+metatxt: meta.tsv
+FASTQ: fq
 
-
-barcode:
+barcode_v2:
   # If the platform is 'Dropseq' or '10x-genomics', please specify the barcode library (whitelist) 
   # so that STARsolo can do the error correction and demultiplexing of cell barcodes. 
   # The 10X Chromium whitelist file can be found inside the CellRanger distribution. 
@@ -17,6 +20,24 @@ barcode:
   # For example, in CellRanger 3.1.0, the V2 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/737K-august-2016.txt'. 
   # The V3 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/3M-february-2018.txt'. 
   whitelist: '/mnt/data8/zhouran/soft/cellranger/cellranger-3.0.0/cellranger-cs/3.0.0/lib/python/cellranger/barcodes/737K-august-2016.txt'
+  # The start site of each barcode. DEFAULT: 1.
+  barcodestart: 1
+  # The length of cell barcode. For 10x-genomics, the length of barcode is 16. DEFAULT: 16. 
+  barcodelength: 16
+  # The start site of UMI. DEFAULT: 17.
+  umistart: 17
+  # The length of UMI. For 10x-genomics, the length of V2 chemistry is 10. 
+  # For 10X V3 chemistry, the length is 12. DEFAULT: 10. 
+  umilength: 10
+
+barcode_v3:
+  # If the platform is 'Dropseq' or '10x-genomics', please specify the barcode library (whitelist) 
+  # so that STARsolo can do the error correction and demultiplexing of cell barcodes. 
+  # The 10X Chromium whitelist file can be found inside the CellRanger distribution. 
+  # Please make sure that the whitelist is compatible with the specific version of the 10X chemistry: V2 or V3. 
+  # For example, in CellRanger 3.1.0, the V2 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/737K-august-2016.txt'. 
+  # The V3 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/3M-february-2018.txt'. 
+  whitelist: '/mnt/data8/zhouran/soft/cellranger/cellranger-3.0.0/cellranger-cs/3.0.0/lib/python/cellranger/barcodes/3M-february-2018.txt.gz'
   # The start site of each barcode. DEFAULT: 1.
   barcodestart: 1
   # The length of cell barcode. For 10x-genomics, the length of barcode is 16. DEFAULT: 16. 
