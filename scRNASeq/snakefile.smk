@@ -79,13 +79,15 @@ rule STARsolo:
 		gtf = config["STAR"]["gtf"],
 		STAR = config["soft"]["STAR"],
 		threads = config["STAR"]["cpus"],
-		star_custom = config["STAR"]["soloFeatures"],
+		star_custom = config["soloFeatures"],
 		outprefix = output_dir +  "STAR/{sample}/{sample}.",
 		whitelist = lambda wildcards: config["barcode_v2"]["whitelist"] if version_check[wildcards.sample]=='v2' else config["barcode_v3"]["whitelist"],
 		barcodestart = lambda wildcards: config["barcode_v2"]["barcodestart"] if version_check[wildcards.sample]=='v2' else config["barcode_v3"]["barcodestart"],
 		barcodelength = lambda wildcards: config["barcode_v2"]["barcodelength"] if version_check[wildcards.sample]=='v2' else config["barcode_v3"]["barcodelength"],
 		umistart = lambda wildcards: config["barcode_v2"]["umistart"] if version_check[wildcards.sample]=='v2' else config["barcode_v3"]["umistart"],
-		umilength = lambda wildcards: config["barcode_v2"]["umilength"] if version_check[wildcards.sample]=='v2' else config["barcode_v3"]["umilength"]
+		umilength = lambda wildcards: config["barcode_v2"]["umilength"] if version_check[wildcards.sample]=='v2' else config["barcode_v3"]["umilength"],
+		samtools = config["soft"]["samtools"],
+		soloBarcodeReadLength = config.get('soloBarcodeReadLength', '')
 
 	log:
 		"Result/Log/{sample}_STAR.log" 
@@ -104,6 +106,7 @@ rule STARsolo:
 			--outSAMattributes NH HI nM AS CR UR CB UB GX GN sS sQ sM \
 			--soloType CB_UMI_Simple \
 			{params.star_custom} \
+			{params.soloBarcodeReadLength} \
 			--soloCBwhitelist {params.whitelist} \
 			--soloCBstart {params.barcodestart} \
 			--soloCBlen {params.barcodelength} \
@@ -114,6 +117,6 @@ rule STARsolo:
 			--readFilesIn {params.r2} {params.r1} --readFilesCommand zcat \
 			> {log} 2>&1
 
-		samtools index -b -@ {params.threads} {output.bam} >> {log} 2>&1
+		{params.samtools} index -b -@ {params.threads} {output.bam} >> {log} 2>&1
 				
 		"""

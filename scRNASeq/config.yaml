@@ -3,9 +3,10 @@
 STAR:
   cpus: 12
   quant: '--soloFeatures Gene'
-  index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
-  gtf: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/Mus_musculus.GRCm38.93.gtf
-  soloFeatures: '--soloFeatures Gene'
+  index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Homo_sapiens/cellranger_STAR_2.7.7/
+  gtf: /mnt/raid62/LungCancer/10x/CellRanger/Homo_sapiens/genes/genes.gtf
+soloFeatures: '--soloFeatures Gene'
+soloBarcodeReadLength: '--soloBarcodeReadLength 150'
 
 #########################################
 
@@ -22,8 +23,8 @@ barcode_v2:
   # The 10X Chromium whitelist file can be found inside the CellRanger distribution. 
   # Please make sure that the whitelist is compatible with the specific version of the 10X chemistry: V2 or V3. 
   # For example, in CellRanger 3.1.0, the V2 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/737K-august-2016.txt'. 
-  # The V3 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/3M-february-2018.txt'. 
-  whitelist: '/mnt/data8/zhouran/soft/cellranger/cellranger-3.0.0/cellranger-cs/3.0.0/lib/python/cellranger/barcodes/737K-august-2016.txt'
+  # https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/737K-august-2016.txt
+  whitelist: '/home/zhouran/data/soft/cellranger/cellranger-3.0.0/cellranger-cs/3.0.0/lib/python/cellranger/barcodes/737K-august-2016.txt'
   # The start site of each barcode. DEFAULT: 1.
   barcodestart: 1
   # The length of cell barcode. For 10x-genomics, the length of barcode is 16. DEFAULT: 16. 
@@ -40,7 +41,7 @@ barcode_v3:
   # The 10X Chromium whitelist file can be found inside the CellRanger distribution. 
   # Please make sure that the whitelist is compatible with the specific version of the 10X chemistry: V2 or V3. 
   # For example, in CellRanger 3.1.0, the V2 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/737K-august-2016.txt'. 
-  # The V3 whitelist is 'cellranger-3.1.0/cellranger-cs/3.1.0/lib/python/cellranger/barcodes/3M-february-2018.txt'. 
+  # https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/3M-february-2018.txt.gz
   whitelist: '/mnt/data8/zhouran/soft/cellranger/cellranger-3.0.0/cellranger-cs/3.0.0/lib/python/cellranger/barcodes/3M-february-2018.txt.gz'
   # The start site of each barcode. DEFAULT: 1.
   barcodestart: 1
@@ -54,3 +55,5 @@ barcode_v3:
 
 soft:
   STAR: /home/zhouran/data/soft/STAR/current/STAR
+  samtools: /home/zhouran/data/miniconda3/bin/samtools
+
