@@ -14,6 +14,6 @@ including your sample label, fastq label and 10X 3'expression library version.
 ## run
 
 ```shell
-snakemake -s smakefile.sml
+snakemake -s smakefile.smk
 ```
 
