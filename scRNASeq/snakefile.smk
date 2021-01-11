@@ -20,7 +20,7 @@ samples = pd.read_csv(config["metatxt"], sep="\t")
 try:
 	_ = samples.version
 except AttributeError:
-	print("There was no strand parameter, please add it")
+	print("There was no library version, please add it")
 	sys.exit(0)
 
 
