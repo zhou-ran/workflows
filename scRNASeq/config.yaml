@@ -5,7 +5,7 @@ STAR:
   quant: '--soloFeatures Gene'
   index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Homo_sapiens/cellranger_STAR_2.7.7/
   gtf: /mnt/raid62/LungCancer/10x/CellRanger/Homo_sapiens/genes/genes.gtf
-soloFeatures: '--soloFeatures Gene'
+soloFeatures: '--soloFeatures Gene SJ Velocyto'
 soloBarcodeReadLength: '--soloBarcodeReadLength 150'
 
 #########################################
