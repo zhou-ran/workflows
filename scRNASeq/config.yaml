@@ -4,7 +4,7 @@ STAR:
   cpus: 12
   quant: '--soloFeatures Gene'
   index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
-  gtf: /liulab/mtang/references/Refdata_scRNA_MAESTRO_GRCh38_1.1.0/genes.gtf
+  gtf: /mnt/raid61/Personal_data/zhouran/reference/cellranger/mm10_93/Mus_musculus.GRCm38.93.gtf
   soloFeatures: '--soloFeatures Gene'
 
 #########################################

@@ -17,3 +17,4 @@ including your sample label, fastq label and 10X 3'expression library version.
 snakemake -s smakefile.smk
 ```
 
+inspired by [scRNAseq](https://github.com/crazyhottommy/pyflow-single-cell/tree/master/scRNAseq)
