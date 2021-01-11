@@ -5,12 +5,16 @@ STAR:
   quant: '--soloFeatures Gene'
   index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/STAR_index_2.7.1a
   gtf: /liulab/mtang/references/Refdata_scRNA_MAESTRO_GRCh38_1.1.0/genes.gtf
+  soloFeatures: '--soloFeatures Gene'
 
 #########################################
 
 output: data
 metatxt: meta.tsv
 FASTQ: fq
+fqsuffix: fastq
+fqext1: 1
+fqext2: 2
 
 barcode_v2:
   # If the platform is 'Dropseq' or '10x-genomics', please specify the barcode library (whitelist) 
@@ -47,3 +51,6 @@ barcode_v3:
   # The length of UMI. For 10x-genomics, the length of V2 chemistry is 10. 
   # For 10X V3 chemistry, the length is 12. DEFAULT: 10. 
   umilength: 12
+
+soft:
+  STAR: /home/zhouran/data/soft/STAR/current/STAR
