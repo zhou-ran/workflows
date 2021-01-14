@@ -90,9 +90,9 @@ rule STARsolo:
 		soloBarcodeReadLength = config.get('soloBarcodeReadLength', '')
 
 	log:
-		"Result/Log/{sample}_STAR.log" 
+		output_dir +  "Log/{sample}_STAR.log" 
 	benchmark:
-		"Result/Benchmark/{sample}_STAR.benchmark"
+		output_dir +  "Benchmark/{sample}_STAR.benchmark"
 
 	shell:
 		"""
