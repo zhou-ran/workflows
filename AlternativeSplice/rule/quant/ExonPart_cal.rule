@@ -16,7 +16,21 @@ rule prepare_gff:
         {params.python2} {params.dexseq_prepare_annotation} {params.gtf} {output.tmp_gff} && \
         awk '{{OFS="\\t"}} {{if ($3 == "exonic_part") print $1,$2,$3,$4,$5,$6,$7,$8,$14":"$12}}' {output.tmp_gff} | \
         sed 's=[";]==g' | \
-        sort -k1,1 -k2,2n > {output.gff}
+        bedtools sort -i /dev/stdin > {output.gff}
+        """
+
+rule g_file:
+    input:
+        bam_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
+        bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
+    output:
+        temp(output_dir + 'ExonPart/chromosomes/{sample}.chromosomes.txt')
+    params:
+        samtools = config['soft']['samtools']
+
+    shell:
+        """
+        {params.samtools} idxstats {input.bam_file} | cut -f 1-2 | grep -v '^*' > {output}
         """
 
 rule sj_filter:
@@ -50,8 +64,10 @@ rule exon_part_cal:
     input:
         sj_file = rules.new_sj_file.output,
         gff_file = rules.prepare_gff.output.gff,
+        g_file = rules.g_file.output,
         bam_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
-        bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai",
+        bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
+
     output:
         output_dir + 'ExonPart/{sample}_exonic_parts.psi'
     params:
@@ -68,6 +84,7 @@ rule exon_part_cal:
         {input.bam_file} \
         {params.length} \
         {input.sj_file} \
+        {input.g_file} \
         {params.prefix}
         """
 
