@@ -1,0 +1,73 @@
+def getLength(wildcards):
+    length = samples.Length[samples.names == wildcards.sample].values.tolist()[0]
+    return length
+
+# calculate exon part psi
+rule prepare_gff:
+    output:
+        tmp_gff = temp(output_dir + "ExonPart/ExonPart.tmp.gff"),
+        gff = output_dir + "ExonPart/ExonPart.gff"
+    params:
+        gtf =config['gtf'],
+        python2 = config['ep']['python2'],
+        dexseq_prepare_annotation = config['ep']['prepare_script']
+    shell:
+        """
+        {params.python2} {params.dexseq_prepare_annotation} {params.gtf} {output.tmp_gff} && \
+        awk '{{OFS="\\t"}} {{if ($3 == "exonic_part") print $1,$2,$3,$4,$5,$6,$7,$8,$14":"$12}}' {output.tmp_gff} | \
+        sed 's=[";]==g' | \
+        sort -k1,1 -k2,2n > {output.gff}
+        """
+
+rule sj_filter:
+    input:
+        expand(output_dir + "STAR/{sample}.SJ.out.tab", sample = samples.names.values.tolist())
+    output:
+        output_dir + 'ExonPart/filtered_sjs.tsv'
+    params:
+        Rscript = config['soft']['Rscript'],
+        filter_sj = config['ep']['filter_sj'],
+        sj_dir = output_dir + 'STAR/'
+
+    shell:
+        """
+        {params.Rscript} {params.filter_sj} {params.sj_dir} {output}
+        """
+
+rule new_sj_file:
+    input:
+        raw_sj = output_dir + "STAR/{sample}.SJ.out.tab",
+        filtered_sjs = rules.sj_filter.output
+    output:
+        output_dir + 'ExonPart/SJs/{sample}.SJ.out.tab'
+
+    shell:
+        """
+        grep -F -f {input.filtered_sjs} {input.raw_sj} > {output}
+        """
+
+rule exon_part_cal:
+    input:
+        sj_file = rules.new_sj_file.output,
+        gff_file = rules.prepare_gff.output.gff,
+        bam_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
+        bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai",
+    output:
+        output_dir + 'ExonPart/{sample}_exonic_parts.psi'
+    params:
+        ep_sh = config['ep']['ExonicPartPSI'],
+        bedtools = config['soft']['bedtools'],
+        prefix = output_dir + 'ExonPart/{sample}',
+        length = getLength
+
+    shell:
+        """
+        bash {params.ep_sh} \
+        {params.bedtools} \
+        {input.gff_file} \
+        {input.bam_file} \
+        {params.length} \
+        {input.sj_file} \
+        {params.prefix}
+        """
+

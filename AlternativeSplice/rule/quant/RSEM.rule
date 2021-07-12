@@ -1,0 +1,30 @@
+def getStrand(wildcards):
+    strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
+    return strand
+
+rule RSEM:
+    input:
+        output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
+    output:
+        output_dir + "RSEM/{sample}.transcript.bam"
+    params:
+        prefix = output_dir + 'RSEM/{sample}',
+        cores = config["RSEM"]["cores"],
+        index = config["RSEM"]["index"],
+        strand = getStrand,
+        rsem = config["soft"]["RSEM"]
+
+    shell:
+        """
+        {params.rsem} \
+            --paired-end \
+            --strandedness {params.strand}\
+            --alignments \
+            --calc-pme \
+            --calc-ci \
+            --sort-bam-by-coordinate \
+            -p {params.cores} \
+            {input} \
+            {params.index} \
+            {params.prefix}
+        """

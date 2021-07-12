@@ -1,0 +1,46 @@
+def multiqc_input(wildcards):
+	input = []
+	input.extend(expand(output_dir + "FastQC/{sample}" + "_fastqc.zip", sample = samples.names[samples.type == 'SE'].values.tolist()),)
+	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext1"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == 'PE'].values.tolist()),)
+	if config["run_RSEM"]:
+		input.extend(expand(output_dir + "RSEM/{sample}.transcript.bam", sample = samples.names.values.tolist()))
+	if config["run_Quant"]:
+		input.extend(["data/quant/quantSce.Rds"])
+	if config["run_STAR"]:
+		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist()))
+		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()))
+	if config["run_RNAmetrics"]:
+		input.extend(expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples.names.values.tolist()))
+	if config["run_ep"]:
+		input.extend(expand(output_dir + 'ExonPart/{sample}_exonic_parts.psi', sample = samples.names.values.tolist()))
+	return input
+
+## Determine the input directories for MultiQC depending on the config file
+def multiqc_params(wildcards):
+	param = [output_dir + "FastQC"]
+	if config["run_trimming"]:
+		param.append(output_dir + "FASTQtrimmed")
+	if config["run_STAR"]:
+		param.append(output_dir + "STAR")
+	if config["run_RSEM"]:
+		param.append(output_dir + "RSEM")
+	if config["run_RNAmetrics"]:
+		param.append(output_dir + "Metrics")
+	return param
+
+
+
+rule fastqcMultiQC:
+	input:
+		multiqc_input
+	output:
+		output_dir + "MultiQC/multiqc_report.html"
+	params:
+		search_dir = multiqc_params,
+		multiout_dir = output_dir + "MultiQC/",
+		multiqc = config["soft"]["multiqc"]
+	shell:
+		"""
+		{params.multiqc} {params.search_dir} -f -o {params.multiout_dir}
+		"""

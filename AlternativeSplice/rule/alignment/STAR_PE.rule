@@ -1,0 +1,62 @@
+def star_func(wildcards):
+	# fetch the library type from the meta information 
+	lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+	# print(wildcards.sample)
+	if lib_type == "SE":
+		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqsuffix"]) + ".gz"])
+
+	if lib_type == "PE":
+		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+				FASTQdir + f"{wildcards.sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"])
+		
+	
+	raise(ValueError("Unrecognized library type value: %s" % wildcards.sample))
+
+rule STAR:
+	input:
+		fqs = star_func
+	output:
+		bam = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
+		trans_bam = output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam",
+		log_file = output_dir + "STAR/{sample}.Log.final.out",
+		sjs = output_dir + "STAR/{sample}.SJ.out.tab"
+
+	params:
+		cores = config["STAR"]["cores"],
+		index = config["STAR"]["index"],
+		outFileNamePrefix = output_dir + "STAR/{sample}.",
+		STAR = config["soft"]["STAR"]
+
+	shell:
+		"""
+		{params.STAR} --runThreadN {params.cores} \
+			--genomeDir {params.index} \
+			--outSAMtype BAM SortedByCoordinate \
+			--outBAMcompression 9 \
+			--limitBAMsortRAM 60000000000 \
+			--readFilesCommand zcat \
+			--quantMode TranscriptomeSAM GeneCounts \
+			--outSJfilterOverhangMin 12 12 12 12 \
+			--alignSJoverhangMin 3 \
+			--alignSJDBoverhangMin 3 \
+			--chimSegmentMin 12 \
+			--chimScoreMin 2 \
+			--chimScoreSeparation 10 \
+			--chimJunctionOverhangMin 12 \
+			--outReadsUnmapped Fastx \
+			--outFilterMultimapNmax 20 \
+			--chimOutType Junctions SeparateSAMold \
+			--readFilesIn {input.fqs} \
+			--outFileNamePrefix {params.outFileNamePrefix}
+		"""
+rule STAR_INDEX:
+		input:
+			output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam"
+		output:
+			bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
+		params:
+			samtools = config['soft']['samtools']
+		shell:
+			"""
+			{params.samtools} index {input}
+			"""
