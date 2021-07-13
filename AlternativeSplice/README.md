@@ -43,7 +43,8 @@ R script
 
 ### Alternative splice
 
-[ExonicPart](https://github.com/LuChenLab/MeDAS)
+ - [ExonicPart](https://github.com/LuChenLab/MeDAS)
+ - rMATs4_1_1 with parameter `--statoff`
 
 ### MultiQC
 
