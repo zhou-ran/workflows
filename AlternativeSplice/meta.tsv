@@ -1,24 +1,24 @@
-names	type	Strand	Length
-hNPC_TNP_P15_b1	PE	reverse	150
-T37_TNP_T_1M_b1	PE	reverse	150
-T46_TNP_T_1M_b1	PE	reverse	150
-WXF94_TNP_T_EM_b1	PE	reverse	150
-WXF83_TNP_T_EM_b1	PE	reverse	150
-T88_TNP_T_2M_b1	PE	reverse	150
-T89_TNP_T_2M_b1	PE	reverse	150
-T93_TNP_T_2M_b1	PE	reverse	150
-WXF48_TNP_T_EM_b1	PE	reverse	150
-WXF49_TNP_T_EM_b1	PE	reverse	150
-WXF50_TNP_T_EM_b1	PE	reverse	150
-WXF96_TNP_T_EM_b1	PE	reverse	150
-WXF100_TNP_T_EM_b1	PE	reverse	150
-hNPC_V2TC_P14_b1	PE	reverse	150
-T6_V2TC_T_1M_b1	PE	reverse	150
-T7_V2TC_T_1M_b1	PE	reverse	150
-T122_V2TC_T_2M_b1	PE	reverse	150
-T123_V2TC_T_2M_b1	PE	reverse	150
-T124_V2TC_T_2M_b1	PE	reverse	150
-WXF121_V2TC_T_EM_b1	PE	reverse	150
-WXF144_V2TC_T_EM_b1	PE	reverse	150
-WXF150_V2TC_T_EM_b1	PE	reverse	150
-hNPC_WT_P12_b1	PE	reverse	150
+names	type	Strand	Length	sample_label	stage	genotype	group
+hNPC_V2TC_P14_b1	PE	reverse	150	V-M0	M0	Vector	M0
+hNPC_WT_P12_b1	PE	reverse	150	WT-M0	M0	WT	M0
+hNPC_TNP_P15_b1	PE	reverse	150	TNP-M0	M0	TNP	M0
+T37_TNP_T_1M_b1	PE	reverse	150	TNP-M1-1	M1	TNP	TNP-M1
+T46_TNP_T_1M_b1	PE	reverse	150	TNP-M1-2	M1	TNP	TNP-M1
+T88_TNP_T_2M_b1	PE	reverse	150	TNP-M2-1	M2	TNP	TNP-M2
+T89_TNP_T_2M_b1	PE	reverse	150	TNP-M2-2	M2	TNP	TNP-M2
+T93_TNP_T_2M_b1	PE	reverse	150	TNP-M2-3	M2	TNP	TNP-M2
+WXF48_TNP_T_EM_b1	PE	reverse	150	TNP-End-1	End	TNP	TNP-End
+WXF49_TNP_T_EM_b1	PE	reverse	150	TNP-End-2	End	TNP	TNP-End
+WXF50_TNP_T_EM_b1	PE	reverse	150	TNP-End-3	End	TNP	TNP-End
+WXF83_TNP_T_EM_b1	PE	reverse	150	TNP-End-4	End	TNP	TNP-End
+WXF94_TNP_T_EM_b1	PE	reverse	150	TNP-End-5	End	TNP	TNP-End
+WXF96_TNP_T_EM_b1	PE	reverse	150	TNP-End-6	End	TNP	TNP-End
+WXF100_TNP_T_EM_b1	PE	reverse	150	TNP-End-7	End	TNP	TNP-End
+T6_V2TC_T_1M_b1	PE	reverse	150	V-M1-1	M1	Vector	Vector-M1
+T7_V2TC_T_1M_b1	PE	reverse	150	V-M1-2	M1	Vector	Vector-M1
+T122_V2TC_T_2M_b1	PE	reverse	150	V-M2-1	M2	Vector	Vector-M2
+T123_V2TC_T_2M_b1	PE	reverse	150	V-M2-2	M2	Vector	Vector-M2
+T124_V2TC_T_2M_b1	PE	reverse	150	V-M2-3	M2	Vector	Vector-M2
+WXF121_V2TC_T_EM_b1	PE	reverse	150	V-End-1	End	Vector	Vector-End
+WXF144_V2TC_T_EM_b1	PE	reverse	150	V-End-2	End	Vector	Vector-End
+WXF150_V2TC_T_EM_b1	PE	reverse	150	V-End-3	End	Vector	Vector-End

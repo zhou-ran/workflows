@@ -1,0 +1,73 @@
+# def gene_rate_bam_cmd(wildcards):
+#     rmats_list = expand(output_dir + 'rMATs/{group}.txt', group = list(set(samples.group.values.tolist())))
+#     cmd_line = [
+#         f'--b{index+1} {group_file} ' for index, group_file in enumerate(rmats_list)
+#     ]
+#     return ''.join(cmd_line)
+
+def get_read_type(wildcards):
+    id_map = {
+        'SE':'single',
+        'PE':'paired'
+    }
+    read_type = list(set(samples.type.values.tolist()))
+    if len(read_type) == 1:
+        return id_map[read_type[0]]
+    else:
+        sys.exit('Error fund in rMATs, columns `type` must be unique for rMATs.')
+
+def get_read_len(wildcards):
+    read_len = list(set(samples.Length.values.tolist()))
+    if len(read_len) == 1:
+        return read_len[0]
+    else:
+        sys.exit('Error fund in rMATs, columns `Length` must be unique for rMATs.')
+
+
+rule bam_files_generate:
+    input:
+        bam_file = expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()),
+        bai_file = expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist())
+    output:
+        expand(output_dir + 'rMATs/{group}.txt', group = list(set(samples.group.values.tolist())))
+    params:
+        prefix = output_dir + 'rMATs/',
+        bam_prefix = output_dir + 'STAR/',
+
+    run:
+        for group_id, sub_config in samples.groupby('group'):
+            with open(f'{params.prefix}/{group_id}.txt', 'w') as file_to_write:
+                file_to_write.write(
+                    ','.join(
+                        [
+                            f'{params.prefix}/{sample}.Aligned.sortedByCoord.out.bam' for sample in sub_config.names.values.tolist()
+                        ]
+                    ) + '\n'
+                )
+
+rule rmats:
+    input:
+        output_dir + 'rMATs/{group}.txt'
+    output:
+        output_dir + 'rMATs/{group}/summary.txt'
+    params:
+        python = config['soft']['python'],
+        rmats = config['soft']['rMATs'],
+        gtf = config['gtf'],
+        output_loc = output_dir + 'rMATs/{group}/',
+        read_type = get_read_type,
+        read_len = get_read_len,
+        cores = config['RSEM']['cores']
+
+    shell:
+        """
+        {params.python} {params.rmats} \
+        --b1 {input} \
+        --gtf {params.gtf} \
+        --od {params.output_loc} \
+        -t {params.read_type} \
+        --nthread {params.cores} \
+        --readLength {params.read_len} \
+        --tmp {params.output_loc} \
+        --statoff
+        """
