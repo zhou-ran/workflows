@@ -24,7 +24,7 @@ rule as_events:
         output_dir + 'ExonPart/SUPPA/SUPPA_A3_strict.ioe'
     params:
         gtf =config['gtf'],
-        prefix = 'SUPPA',
+        prefix = output_dir + 'ExonPart/SUPPA/SUPPA',
         suppa = config['soft']['suppa'],
         python = config['soft']['python']
     shell:
@@ -122,7 +122,7 @@ rule mergePSI:
     output:
         output_dir + 'ExonPart/res_ExonicPart_PSI.tsv'
     params:
-        prefix = 'res',
+        prefix = output_dir + 'ExonPart/res',
         psi_loc = output_dir + 'ExonPart',
         merge_psi = config['ep']['mergePSI'],
         Rscript = config['soft']['Rscript']
