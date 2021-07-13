@@ -13,7 +13,9 @@ def multiqc_input(wildcards):
 	if config["run_RNAmetrics"]:
 		input.extend(expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples.names.values.tolist()))
 	if config["run_ep"]:
-		input.extend(expand(output_dir + 'ExonPart/{sample}_exonic_parts.psi', sample = samples.names.values.tolist()))
+		input.extend(expand(output_dir + 'ExonPart/{sample}_exonic_parts.psi', sample = samples.names.values.tolist())),
+		output_dir + 'ExonPart/res_ExonicPart_PSI.tsv',
+		output_dir + 'ExonPart/SUPPA/SUPPA_A3_strict.ioe'
 	return input
 
 ## Determine the input directories for MultiQC depending on the config file

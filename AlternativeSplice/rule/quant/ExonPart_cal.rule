@@ -19,6 +19,23 @@ rule prepare_gff:
         bedtools sort -i /dev/stdin > {output.gff}
         """
 
+rule as_events:
+    output:
+        output_dir + 'ExonPart/SUPPA/SUPPA_A3_strict.ioe'
+    params:
+        gtf =config['gtf'],
+        prefix = 'SUPPA',
+        suppa = config['soft']['suppa'],
+        python = config['soft']['python']
+    shell:
+        """
+        {params.python} {params.suppa} generateEvents \
+        -i {params.gtf} \
+        -o {params.prefix} \
+        -f ioe \
+        -e SE SS MX RI FL
+        """
+
 rule g_file:
     input:
         bam_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
@@ -84,18 +101,37 @@ rule exon_part_cal:
         output_dir + 'ExonPart/{sample}_exonic_parts.psi'
     params:
         ep_sh = config['ep']['ExonicPartPSI'],
-        bedtools = config['soft']['bedtools'],
+        bedtools223 = config['soft']['bedtools223'],
         prefix = output_dir + 'ExonPart/{sample}',
         length = getLength
 
     shell:
         """
         bash {params.ep_sh} \
-        {params.bedtools} \
+        {params.bedtools223} \
         {input.gff_file} \
         {input.bam_file} \
         {params.length} \
         {input.sj_file} \
         {params.prefix}
+        """
+
+rule mergePSI:
+    input:
+        expand(output_dir + 'ExonPart/{sample}_exonic_parts.psi', sample = samples.names.values.tolist())
+    output:
+        output_dir + 'ExonPart/res_ExonicPart_PSI.tsv'
+    params:
+        prefix = 'res',
+        psi_loc = output_dir + 'ExonPart',
+        merge_psi = config['ep']['mergePSI'],
+        Rscript = config['soft']['Rscript']
+
+    shell:
+        """
+        Rscript {params.merge_psi} \
+        -i {params.psi_loc} \
+        -o {params.prefix} \
+        -t PSI
         """
 

@@ -64,6 +64,7 @@ ep:
   prepare_script: script/dexseq_prepare_annotation.py
   filter_sj: script/filter_SJs.R
   ExonicPartPSI: script/Exon_Part.sh
+  mergePSI: script/mergePSI.R
 
 ## soft
 ##---------------------------------------------------------------------------------------------
@@ -75,6 +76,9 @@ soft:
  multiqc: /home/zhouran/data/anaconda3/envs/multiqc/bin/multiqc
  Rscript: /home/zhouran/data/soft/R/R.3.6/bin/Rscript
  samtools: /home/zhouran/data/anaconda3/bin/samtools
+ bedtools223: /mnt/raid61/Personal_data/lizhidan/studio/ExonicPart_PSI/bedtools2.23/bin/bedtools
  bedtools: /home/zhouran/data/soft/bedtools/current/bedtools
+ python: /home/zhouran/data/anaconda3/envs/probe/bin/python
+ suppa: /home/zhouran/data/soft/suppa/current/suppa.py
 ##---------------------------------------------------------------------------------------------
 
