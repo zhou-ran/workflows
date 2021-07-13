@@ -20,7 +20,6 @@ Mandatory:
     <alignment_file.bam>        RNAseq aligned bam files
     <readLength>                RNAseq reads length, only one side.
     <SJ.out.tab>                SJ.out.tab file.
-    <genomefile>                genome file.
     <baseName>                  Prefix of outputfiles.
 
 For details see: "Schafer, S., et al. 2015. Alternative splicing signatures in RNA-seq data: percent spliced in (PSI). Curr. Protoc. Hum. Genet."
@@ -38,15 +37,14 @@ GFF=$2
 INBAM=$3
 readLength=$4
 JUNCTIONS=$5
-g_file=$6
-PREFIX=$7
+PREFIX=$6
 
 echo "Make junctions bed file...."
 sort -k1,1 -k2,2n -k3,3n ${JUNCTIONS} | awk 'BEGIN{OFS="\t"}{print $1, $2-20-1, $3+20, "JUNCBJ"NR, $7, ($4 == 1)? "+":"-",$2-20-1, $3+20, "255,0,0", 2, "20,20", "0,300" }' > ${PREFIX}_junctions.bed
 
 
 echo "Counting exon coverage...."
-${BEDTOOLS} coverage -split -abam ${INBAM} -b ${GFF} -g ${g_file} -sorted | awk 'BEGIN{OFS="\t"} {print $1,$4,$5,$5-$4+1,$9,$10}' | sort -k5,5 > ${PREFIX}_exonic_parts.inclusion
+${BEDTOOLS} coverage -split -abam ${INBAM} -b ${GFF} | awk 'BEGIN{OFS="\t"} {print $1,$4,$5,$5-$4+1,$9,$10}' | sort -k5,5 > ${PREFIX}_exonic_parts.inclusion
 
 sed 's/,/\t/g' ${PREFIX}_junctions.bed | grep -v description | awk '{OFS="\t"}{print $1,$2+$13, $3-$14,$4,$5,$6}' > ${PREFIX}_intron.bed
 

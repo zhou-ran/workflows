@@ -96,7 +96,6 @@ rule exon_part_cal:
         {input.bam_file} \
         {params.length} \
         {input.sj_file} \
-        {input.g_file} \
         {params.prefix}
         """
 

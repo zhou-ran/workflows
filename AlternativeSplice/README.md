@@ -2,6 +2,9 @@
 # Alternative splice analysis using Exonic Part
 
 
+`Note: Bedtools2.23`
+
+
 
 ```shell
 snakemake -s Snakefile.smk
