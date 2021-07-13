@@ -33,6 +33,19 @@ rule g_file:
         {params.samtools} idxstats {input.bam_file} | cut -f 1-2 | grep -v '^*' > {output}
         """
 
+rule sort_per_sample:
+    input:
+        gtf_file = rules.prepare_gff.output.gff,
+        g_file = rules.g_file.output
+    output:
+        temp(output_dir + 'ExonPart/gtf/{sample}.gff')
+    params:
+        bedtools = config['soft']['bedtools']
+    shell:
+        """
+        {params.bedtools} sort -faidx {input.g_file} -i {input.gtf_file} > {output}
+        """
+
 rule sj_filter:
     input:
         expand(output_dir + "STAR/{sample}.SJ.out.tab", sample = samples.names.values.tolist())
@@ -42,7 +55,6 @@ rule sj_filter:
         Rscript = config['soft']['Rscript'],
         filter_sj = config['ep']['filter_sj'],
         sj_dir = output_dir + 'STAR/'
-
     shell:
         """
         {params.Rscript} {params.filter_sj} {params.sj_dir} {output}
@@ -63,7 +75,7 @@ rule new_sj_file:
 rule exon_part_cal:
     input:
         sj_file = rules.new_sj_file.output,
-        gff_file = rules.prepare_gff.output.gff,
+        gff_file = rules.sort_per_sample.output,
         g_file = rules.g_file.output,
         bam_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
         bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
