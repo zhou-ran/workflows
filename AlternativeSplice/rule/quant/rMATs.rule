@@ -4,6 +4,19 @@
 #         f'--b{index+1} {group_file} ' for index, group_file in enumerate(rmats_list)
 #     ]
 #     return ''.join(cmd_line)
+def stand_map(wildcards):
+    strand_map = {
+        'reverse': 'fr-firststrand',
+        'forward': 'fr-secondstrand',
+        'none': 'fr-unstranded'
+    }
+    strand_type = list(set(samples.Strand.values.tolist()))
+    if len(strand_type) == 1:
+        return strand_map[strand_type[0]]
+    else:
+        sys.exit('Error fund in rMATs, columns `Strand` must be unique for rMATs.')
+
+    return strand_map
 
 def get_read_type(wildcards):
     id_map = {
@@ -29,38 +42,39 @@ rule bam_files_generate:
         bam_file = expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()),
         bai_file = expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist())
     output:
-        expand(output_dir + 'rMATs/{group}.txt', group = list(set(samples.group.values.tolist())))
+        output_dir + 'rMATs/bam.txt'
     params:
         prefix = output_dir + 'rMATs/',
         bam_prefix = output_dir + 'STAR/',
 
     run:
-        for group_id, sub_config in samples.groupby('group'):
-            with open(f'{params.prefix}/{group_id}.txt', 'w') as file_to_write:
-                file_to_write.write(
-                    ','.join(
-                        [
-                            f'{params.prefix}/{sample}.Aligned.sortedByCoord.out.bam' for sample in sub_config.names.values.tolist()
-                        ]
-                    ) + '\n'
-                )
+        with open(output, 'w') as file_to_write:
+            file_to_write.write(
+                ','.join(
+                    [
+                        f'{params.prefix}/{sample}.Aligned.sortedByCoord.out.bam' for sample in config.names.values.tolist()
+                    ]
+                ) + '\n'
+            )
 
 rule rmats:
     input:
-        output_dir + 'rMATs/{group}.txt'
+        rules.bam_files_generate.output
     output:
-        output_dir + 'rMATs/{group}/summary.txt'
+        output_dir + 'rMATs/summary.txt'
     params:
         python = config['soft']['python'],
         rmats = config['soft']['rMATs'],
         gtf = config['gtf'],
-        output_loc = output_dir + 'rMATs/{group}/',
+        output_loc = output_dir + 'rMATs/',
         read_type = get_read_type,
         read_len = get_read_len,
-        cores = config['RSEM']['cores']
+        cores = config['RSEM']['cores'],
+        strand = stand_map
 
     shell:
         """
+
         {params.python} {params.rmats} \
         --b1 {input} \
         --gtf {params.gtf} \
@@ -68,6 +82,10 @@ rule rmats:
         -t {params.read_type} \
         --nthread {params.cores} \
         --readLength {params.read_len} \
-        --tmp {params.output_loc} \
-        --statoff
+        --tmp {params.output_loc}_tmp \
+        --statoff \
+        --variable-read-length \
+        --libType {params.strand} \
+        --task post
+
         """

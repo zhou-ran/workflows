@@ -17,7 +17,7 @@ def multiqc_input(wildcards):
 		input.append(output_dir + 'ExonPart/res_ExonicPart_PSI.tsv'),
 		input.append(output_dir + 'ExonPart/SUPPA/SUPPA_A3_strict.ioe')
 	if config["run_rMATs"]:
-		input.extend(expand(output_dir + 'rMATs/{group}/summary.txt', group = list(set(samples.group.values.tolist()))))
+		input.append(output_dir + 'rMATs/summary.txt')
 
 	return input
 
