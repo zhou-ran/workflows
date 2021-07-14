@@ -80,10 +80,8 @@ rule rmats:
         -t {params.read_type} \
         --nthread {params.cores} \
         --readLength {params.read_len} \
-        --tmp {params.output_loc}_tmp \
+        --tmp {params.output_loc} \
         --statoff \
         --variable-read-length \
-        --libType {params.strand} \
-        --task post
-
+        --libType {params.strand}
         """
