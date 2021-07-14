@@ -15,7 +15,6 @@ def stand_map(wildcards):
         return strand_map[strand_type[0]]
     else:
         sys.exit('Error fund in rMATs, columns `Strand` must be unique for rMATs.')
-
     return strand_map
 
 def get_read_type(wildcards):
@@ -42,21 +41,20 @@ rule bam_files_generate:
         bam_file = expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()),
         bai_file = expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist())
     output:
-        output_dir + 'rMATs/bam.txt'
+        bam_config = output_dir + 'rMATs/bam.txt'
     params:
         prefix = output_dir + 'rMATs/',
         bam_prefix = output_dir + 'STAR/',
 
     run:
-        with open(output, 'w') as file_to_write:
+        with open(output.bam_config, 'w') as file_to_write:
             file_to_write.write(
                 ','.join(
                     [
-                        f'{params.prefix}/{sample}.Aligned.sortedByCoord.out.bam' for sample in config.names.values.tolist()
+                        f'{params.prefix}/{sample}.Aligned.sortedByCoord.out.bam' for sample in samples.names.values.tolist()
                     ]
                 ) + '\n'
             )
-
 rule rmats:
     input:
         rules.bam_files_generate.output
