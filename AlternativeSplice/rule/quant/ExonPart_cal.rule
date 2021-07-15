@@ -2,31 +2,46 @@ def getLength(wildcards):
     length = samples.Length[samples.names == wildcards.sample].values.tolist()[0]
     return length
 
+rule prepare_coding_gtf:
+    output:
+        output_dir + "ExonPart/coding.gtf"
+    params:
+        rscript = config["soft"]["Rscript"],
+        make_coding = config["ep"]["make_coding"],
+        gtf = config["gtf"]
+    shell:
+        """
+        {params.rscript} \
+        {params.make_coding} \
+        {params.gtf} \
+        {output}
+        """
 # calculate exon part psi
 rule prepare_gff:
+    input:
+        gtf = rules.prepare_coding_gtf.output
     output:
         tmp_gff = temp(output_dir + "ExonPart/ExonPart.tmp.gff"),
         gff = output_dir + "ExonPart/ExonPart.gff"
     params:
-        gtf =config['gtf'],
-        python2 = config['ep']['python2'],
-        dexseq_prepare_annotation = config['ep']['prepare_script']
+        python2 = config["ep"]["python2"],
+        dexseq_prepare_annotation = config["ep"]["prepare_script"]
     shell:
         """
-        {params.python2} {params.dexseq_prepare_annotation} {params.gtf} {output.tmp_gff} && \
-        awk '{{OFS="\\t"}} {{if ($3 == "exonic_part") print $1,$2,$3,$4,$5,$6,$7,$8,$14":"$12}}' {output.tmp_gff} | \
+        {params.python2} {params.dexseq_prepare_annotation} {input.gtf} {output.tmp_gff} && \
+        awk "{{OFS="\\t"}} {{if ($3 == "exonic_part") print $1,$2,$3,$4,$5,$6,$7,$8,$14":"$12}}" {output.tmp_gff} | \
         sed 's=[";]==g' | \
         bedtools sort -i /dev/stdin > {output.gff}
         """
 
 rule as_events:
     output:
-        output_dir + 'ExonPart/SUPPA/SUPPA_A3_strict.ioe'
+        output_dir + "ExonPart/SUPPA/SUPPA_A3_strict.ioe"
     params:
-        gtf =config['gtf'],
-        prefix = output_dir + 'ExonPart/SUPPA/SUPPA',
-        suppa = config['soft']['suppa'],
-        python = config['soft']['python']
+        gtf =config["gtf"],
+        prefix = output_dir + "ExonPart/SUPPA/SUPPA",
+        suppa = config["soft"]["suppa"],
+        python = config["soft"]["python"]
     shell:
         """
         {params.python} {params.suppa} generateEvents \
@@ -41,13 +56,13 @@ rule g_file:
         bam_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
         bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
     output:
-        temp(output_dir + 'ExonPart/chromosomes/{sample}.chromosomes.txt')
+        temp(output_dir + "ExonPart/chromosomes/{sample}.chromosomes.txt")
     params:
-        samtools = config['soft']['samtools']
+        samtools = config["soft"]["samtools"]
 
     shell:
         """
-        {params.samtools} idxstats {input.bam_file} | cut -f 1-2 | grep -v '^*' > {output}
+        {params.samtools} idxstats {input.bam_file} | cut -f 1-2 | grep -v "^*" > {output}
         """
 
 rule sort_per_sample:
@@ -55,9 +70,9 @@ rule sort_per_sample:
         gtf_file = rules.prepare_gff.output.gff,
         g_file = rules.g_file.output
     output:
-        temp(output_dir + 'ExonPart/gtf/{sample}.gff')
+        temp(output_dir + "ExonPart/gtf/{sample}.gff")
     params:
-        bedtools = config['soft']['bedtools']
+        bedtools = config["soft"]["bedtools"]
     shell:
         """
         {params.bedtools} sort -faidx {input.g_file} -i {input.gtf_file} > {output}
@@ -67,11 +82,11 @@ rule sj_filter:
     input:
         expand(output_dir + "STAR/{sample}.SJ.out.tab", sample = samples.names.values.tolist())
     output:
-        output_dir + 'ExonPart/filtered_sjs.tsv'
+        output_dir + "ExonPart/filtered_sjs.tsv"
     params:
-        Rscript = config['soft']['Rscript'],
-        filter_sj = config['ep']['filter_sj'],
-        sj_dir = output_dir + 'STAR/'
+        Rscript = config["soft"]["Rscript"],
+        filter_sj = config["ep"]["filter_sj"],
+        sj_dir = output_dir + "STAR/"
     shell:
         """
         {params.Rscript} {params.filter_sj} {params.sj_dir} {output}
@@ -82,7 +97,7 @@ rule new_sj_file:
         raw_sj = output_dir + "STAR/{sample}.SJ.out.tab",
         filtered_sjs = rules.sj_filter.output
     output:
-        output_dir + 'ExonPart/SJs/{sample}.SJ.out.tab'
+        output_dir + "ExonPart/SJs/{sample}.SJ.out.tab"
 
     shell:
         """
@@ -98,11 +113,11 @@ rule exon_part_cal:
         bai_file = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai"
 
     output:
-        output_dir + 'ExonPart/{sample}_exonic_parts.psi'
+        output_dir + "ExonPart/{sample}_exonic_parts.psi"
     params:
-        ep_sh = config['ep']['ExonicPartPSI'],
-        bedtools223 = config['soft']['bedtools223'],
-        prefix = output_dir + 'ExonPart/{sample}',
+        ep_sh = config["ep"]["ExonicPartPSI"],
+        bedtools223 = config["soft"]["bedtools223"],
+        prefix = output_dir + "ExonPart/{sample}",
         length = getLength
 
     shell:
@@ -118,14 +133,14 @@ rule exon_part_cal:
 
 rule mergePSI:
     input:
-        expand(output_dir + 'ExonPart/{sample}_exonic_parts.psi', sample = samples.names.values.tolist())
+        expand(output_dir + "ExonPart/{sample}_exonic_parts.psi", sample = samples.names.values.tolist())
     output:
-        output_dir + 'ExonPart/res_ExonicPart_PSI.tsv'
+        output_dir + "ExonPart/res_ExonicPart_PSI.tsv"
     params:
-        prefix = output_dir + 'ExonPart/res',
-        psi_loc = output_dir + 'ExonPart',
-        merge_psi = config['ep']['mergePSI'],
-        Rscript = config['soft']['Rscript']
+        prefix = output_dir + "ExonPart/res",
+        psi_loc = output_dir + "ExonPart",
+        merge_psi = config["ep"]["mergePSI"],
+        Rscript = config["soft"]["Rscript"]
 
     shell:
         """

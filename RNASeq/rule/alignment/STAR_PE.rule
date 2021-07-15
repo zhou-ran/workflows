@@ -12,9 +12,27 @@ def star_func(wildcards):
 	
 	raise(ValueError("Unrecognized library type value: %s" % wildcards.sample))
 
+rule load_share_memo:
+	output:
+		output_dir + "STAR/load_share_memo/ShareLoadInfo.log"
+	params:
+		STAR = config["soft"]["STAR"],
+		index = config["STAR"]["index"],
+		outFileNamePrefix = output_dir + "STAR/load_share_memo/"
+	shell:
+		"""
+
+		{params.STAR} --genomeLoad LoadAndExit \
+		--genomeDir {params.index} \
+		--outFileNamePrefix {params.outFileNamePrefix} > {output}
+
+		"""
+
+
 rule STAR:
 	input:
-		fqs = star_func
+		fqs = star_func,
+		load_success = rules.load_share_memo.output
 	output:
 		bam = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
 		trans_bam = output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam",
@@ -43,6 +61,7 @@ rule STAR:
 			--chimJunctionOverhangMin 12 \
 			--outReadsUnmapped Fastx \
 			--outFilterMultimapNmax 20 \
+			--genomeLoad LoadAndKeep \
 			--chimOutType Junctions SeparateSAMold \
 			--readFilesIn {input.fqs} \
 			--outFileNamePrefix {params.outFileNamePrefix}
@@ -58,3 +77,21 @@ rule STAR_INDEX:
 			"""
 			{params.samtools} index {input}
 			"""
+
+rule remove_share_memo:
+	input:
+		expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist())
+	output:
+		output_dir + "STAR/remove_share_memo/ShareLoadInfo.log"
+	params:
+		STAR = config["soft"]["STAR"],
+		index = config["STAR"]["index"],
+		outFileNamePrefix = output_dir + "STAR/remove_share_memo"
+	shell:
+		"""
+
+		{params.STAR} --genomeLoad Remove \
+		--genomeDir {params.index} \
+		--outFileNamePrefix {params.outFileNamePrefix} > {output}
+
+		"""

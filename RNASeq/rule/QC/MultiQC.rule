@@ -10,9 +10,9 @@ def multiqc_input(wildcards):
 	if config["run_STAR"]:
 		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist()))
 		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()))
+		input.append(output_dir + "STAR/remove_share_memo/ShareLoadInfo.log")
 	if config["run_RNAmetrics"]:
 		input.extend(expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples.names.values.tolist()))
-
 	return input
 
 ## Determine the input directories for MultiQC depending on the config file

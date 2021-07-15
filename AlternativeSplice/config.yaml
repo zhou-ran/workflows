@@ -32,7 +32,7 @@ metatxt: meta.tsv
 ## Single-end fastq files are supposed to be named 
 ## <sample-name>.<fqsuffix>.gz.
 ##---------------------------------------------------------------------------------------------
-FASTQ: example_data/FASTQ
+FASTQ: fq
 fqext1: r1
 fqext2: r2
 fqsuffix: fq
@@ -43,18 +43,18 @@ fqsuffix: fq
 ## STAR information
 ##---------------------------------------------------------------------------------------------
 STAR:
- index: /mnt/raid61/Microwell/hg19/refdata-cellranger-hg19-3.0.0/star_2.7/
+ index: /mnt/raid64/ref_genomes/HomSap/release101/STAR_index
  cores: 8
-fa: /mnt/raid61/Microwell/hg19/refdata-cellranger-hg19-3.0.0/fasta/genome.fa
-gtf: /mnt/raid61/Microwell/hg19/refdata-cellranger-hg19-3.0.0/genes/genes.gtf
-refFlat: /mnt/raid61/Microwell/hg19/refdata-cellranger-hg19-3.0.0/genes/refFlat.txt.gz
+fa: /mnt/raid64/ref_genomes/HomSap/release101/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
+gtf: /mnt/raid64/ref_genomes/HomSap/release101/Homo_sapiens.GRCh38.101.gtf
+refFlat: /mnt/raid64/ref_genomes/HomSap/release101/Homo_sapiens.GRCh38.101.refFlat
 
 ##---------------------------------------------------------------------------------------------
 
 ## quant information
 ##---------------------------------------------------------------------------------------------
 RSEM:
- index: /mnt/raid61/Personal_data/zhouran/reference/RSEM/hg19/hg19
+ index: /mnt/raid64/ref_genomes/HomSap/release101/RSEM_index
  cores: 8
 ##---------------------------------------------------------------------------------------------
 
@@ -66,12 +66,13 @@ ep:
   filter_sj: script/filter_SJs.R
   ExonicPartPSI: script/Exon_Part.sh
   mergePSI: script/mergePSI.R
+  make_coding: script/make_coding_gtf.R
 
 ## soft
 ##---------------------------------------------------------------------------------------------
 soft:
  picard: /home/zhouran/data/soft/picard/picard.jar
- STAR: /home/zhouran/data/soft/STAR/current/STAR
+ STAR: /mnt/raid61/Personal_data/lizhidan/software/STAR-2.6.1a/bin/Linux_x86_64/STAR
  FastQC: /home/zhouran/data/anaconda3/bin/fastqc
  RSEM: /home/zhouran/data/soft/RSEM/current/bin/rsem-calculate-expression
  multiqc: /home/zhouran/data/anaconda3/envs/multiqc/bin/multiqc

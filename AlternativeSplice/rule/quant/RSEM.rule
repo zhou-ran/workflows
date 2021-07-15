@@ -8,7 +8,7 @@ rule RSEM:
     output:
         output_dir + "RSEM/{sample}.transcript.bam"
     params:
-        prefix = output_dir + 'RSEM/{sample}',
+        prefix = output_dir + "RSEM/{sample}",
         cores = config["RSEM"]["cores"],
         index = config["RSEM"]["index"],
         strand = getStrand,
