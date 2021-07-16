@@ -8,19 +8,22 @@ if len(config) == 0:
 	if os.path.isfile("./config.yaml"):
 		configfile: "./config.yaml"
 	else:
-		sys.exit("Make sure there is a config.yaml file in " + os.getcwd() + " or specify one with the --configfile commandline parameter.")
+		sys.exit("\033[91m Make sure there is a config.yaml file in " + \
+		os.getcwd() + \
+		" or specify one with the --configfile commandline parameter. \033[0m")
 
 ## Read metadata
 if not os.path.isfile(config["metatxt"]):
-	sys.exit("Metadata file " + config["metatxt"] + " does not exist.")
+	sys.exit("\033[91m Metadata file " + config["metatxt"] + " does not exist. \033[0m")
 
 samples = pd.read_csv(config["metatxt"], sep='\t')
 
 try:
 	_ = samples.Strand
+	_ = samples.Length
 except AttributeError:
-	print("There was no strand parameter, please add it")
-	sys.exit(0)
+	sys.exit("\033[91mThere was no Strand or Length column in " + 
+	"{}, please add it. \033[0m".format(config["metatxt"]))
 
 ## Sanitize provided input and output directories
 def getpath(str):
