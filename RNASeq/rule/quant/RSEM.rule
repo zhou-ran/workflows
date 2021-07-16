@@ -6,7 +6,7 @@ rule RSEM:
     input:
         output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
     output:
-        output_dir + "RSEM/{sample}.transcript.bam"
+        output_dir + "RSEM/{sample}.genes.results"
     params:
         prefix = output_dir + 'RSEM/{sample}',
         cores = config["RSEM"]["cores"],
@@ -22,7 +22,7 @@ rule RSEM:
             --alignments \
             --calc-pme \
             --calc-ci \
-            --sort-bam-by-coordinate \
+            --no-bam-output \
             -p {params.cores} \
             {input} \
             {params.index} \
