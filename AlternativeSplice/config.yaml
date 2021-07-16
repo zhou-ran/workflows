@@ -54,7 +54,7 @@ refFlat: /mnt/raid64/ref_genomes/HomSap/release101/Homo_sapiens.GRCh38.101.refFl
 ## quant information
 ##---------------------------------------------------------------------------------------------
 RSEM:
- index: /mnt/raid64/ref_genomes/HomSap/release101/RSEM_index
+ index: /mnt/raid64/ref_genomes/HomSap/release101/RSEM_index/RSEM_index
  cores: 8
 ##---------------------------------------------------------------------------------------------
 
