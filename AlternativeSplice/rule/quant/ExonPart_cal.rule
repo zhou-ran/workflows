@@ -21,7 +21,7 @@ rule prepare_gff:
     input:
         gtf = rules.prepare_coding_gtf.output
     output:
-        tmp_gff = temp(output_dir + "ExonPart/ExonPart.tmp.gff"),
+        reduce_gtf = output_dir + "ExonPart/coding_reduce.gtf",
         gff = output_dir + "ExonPart/ExonPart.gff"
     params:
         python2 = config["ep"]["python2"],
