@@ -5,6 +5,7 @@ def multiqc_input(wildcards):
 	input.extend(expand(output_dir + "FastQC/{sample}_" + str(config["fqext2"]) + "_fastqc.zip", sample = samples.names[samples.type == "PE"].values.tolist()),)
 	if config["run_RSEM"]:
 		input.extend(expand(output_dir + "RSEM/{sample}.genes.results", sample = samples.names.values.tolist()))
+		output_dir + "RSEM/RSEM.Rds"
 	if config["run_Quant"]:
 		input.extend(["data/quant/quantSce.Rds"])
 	if config["run_STAR"]:

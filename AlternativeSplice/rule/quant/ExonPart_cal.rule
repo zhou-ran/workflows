@@ -29,8 +29,8 @@ rule prepare_gff:
         bedtools = config["soft"]["bedtools"]
     shell:
         """
-        {params.python2} {params.dexseq_prepare_annotation} {input.gtf} {output.tmp_gff} && \
-        awk '{{OFS="\\t"}} {{if ($3 == "exonic_part") print $1,$2,$3,$4,$5,$6,$7,$8,$14":"$12}}' {output.tmp_gff} | \
+        {params.python2} {params.dexseq_prepare_annotation} {input.gtf} {output.reduce_gtf} && \
+        awk '{{OFS="\\t"}} {{if ($3 == "exonic_part") print $1,$2,$3,$4,$5,$6,$7,$8,$14":"$12}}' {output.reduce_gtf} | \
         sed 's=[";]==g' | \
         {params.bedtools} sort -i /dev/stdin > {output.gff}
         """

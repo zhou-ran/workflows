@@ -23,11 +23,11 @@ multi_merge <-
                  if (SJtype == "all") {
                    tab <- tab
                  } else if (SJtype == "allAnnotated") {
-                   tab <- tab[V6 == 1,]
+                   tab <- tab[V6 == 1, ]
                  } else if (SJtype == "allAnnotatedAndCanonicallyNovel") {
-                   tab <- tab[(V6 == 1) | (V5 != 0),]
+                   tab <- tab[(V6 == 1) | (V5 != 0), ]
                  } else if (SJtype == "allCanonical") {
-                   tab <- tab[V5 != 0,]
+                   tab <- tab[V5 != 0, ]
                  } else {
                    stop("'SJtype' error")
                  }
@@ -75,24 +75,32 @@ multi_merge <-
       )]
     
     info <-
-      info[SJ_2_keep[, Total_cnt >= minSJs & Total_sample >= minSamps],]
+      info[SJ_2_keep[, Total_cnt >= minSJs &
+                       Total_sample >= minSamps], ]
     
     return(info)
   }
 
-raw_SJs_path <- args[1] ## STAR output directory for a species, STAROUT
+raw_SJs_path <-
+  args[1] ## STAR output directory for a species, STAROUT
 filtered_SJs <- args[2] ## SJs for calculate PSI
 
-res <- 
-    multi_merge(
-        path = raw_SJs_path,
-        pattern = ".SJ.out.tab",
-        minSJ = 10,
-        minSJs = 100,
-        minSamps = 2,
-        uniqueMapOnly = TRUE,
-        SJtype = "allAnnotatedAndCanonicallyNovel",
-        cores = 20
-    )
-  
-fwrite(res, filtered_SJs, sep = "\t", row.names = F, col.names = F)
+res <-
+  multi_merge(
+    path = raw_SJs_path,
+    pattern = ".SJ.out.tab",
+    minSJ = 10,
+    minSJs = 100,
+    minSamps = 2,
+    uniqueMapOnly = TRUE,
+    SJtype = "allAnnotatedAndCanonicallyNovel",
+    cores = 20
+  )
+
+fwrite(
+  res,
+  filtered_SJs,
+  sep = "\t",
+  row.names = F,
+  col.names = F
+)

@@ -1,6 +1,6 @@
 def getStrand(wildcards):
     strand_index = {
-        "none": "None",
+        "none": "NONE",
         "reverse": "SECOND_READ_TRANSCRIPTION_STRAND",
         "forward": "FIRST_READ_TRANSCRIPTION_STRAND"
     }
