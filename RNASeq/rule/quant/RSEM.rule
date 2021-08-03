@@ -2,22 +2,30 @@ def getStrand(wildcards):
     strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
     return strand
 
+def getLib(wildcards):
+    lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+    if lib_type == "PE":
+        return "--paired-end"
+    else:
+        return ""
+
 rule RSEM:
     input:
         output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
     output:
         output_dir + "RSEM/{sample}.genes.results"
     params:
-        prefix = output_dir + 'RSEM/{sample}',
+        prefix = output_dir + "RSEM/{sample}",
         cores = config["RSEM"]["cores"],
         index = config["RSEM"]["index"],
         strand = getStrand,
+        library_type = getLib,
         rsem = config["soft"]["RSEM"]
 
     shell:
         """
         {params.rsem} \
-            --paired-end \
+            {params.library_type} \
             --strandedness {params.strand}\
             --alignments \
             --calc-pme \
@@ -27,4 +35,18 @@ rule RSEM:
             {input} \
             {params.index} \
             {params.prefix}
+        """
+
+rule extract_RSEM:
+    input:
+        expand(output_dir + "RSEM/{sample}.genes.results", sample = samples.names.values.tolist())
+    output:
+        output_dir + "RSEM/RSEM.Rds"
+    params:
+        Rscript = config["soft"]["Rscript"],
+        rsem_r = config["RSEM"]["extract_R"],
+        rsem_loc = output_dir + "RSEM"
+    shell:
+        """
+        {params.Rscript} {params.rsem_r} {params.rsem_loc}
         """

@@ -3,7 +3,7 @@ def star_func(wildcards):
 	lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
 	# print(wildcards.sample)
 	if lib_type == "SE":
-		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqsuffix"]) + ".gz"])
+		return([FASTQdir + f"{wildcards.sample}." + str(config["fqsuffix"]) + ".gz"])
 
 	if lib_type == "PE":
 		return([FASTQdir + f"{wildcards.sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",

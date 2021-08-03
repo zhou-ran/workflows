@@ -2,6 +2,13 @@ def getStrand(wildcards):
     strand = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
     return strand
 
+def getLib(wildcards):
+    lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+    if lib_type == "PE":
+        return "--paired-end"
+    else:
+        return ""
+
 rule RSEM:
     input:
         output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam"
@@ -12,12 +19,13 @@ rule RSEM:
         cores = config["RSEM"]["cores"],
         index = config["RSEM"]["index"],
         strand = getStrand,
+        library_type = getLib,
         rsem = config["soft"]["RSEM"]
 
     shell:
         """
         {params.rsem} \
-            --paired-end \
+            {params.library_type} \
             --strandedness {params.strand}\
             --alignments \
             --calc-pme \
