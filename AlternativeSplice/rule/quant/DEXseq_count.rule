@@ -1,0 +1,46 @@
+def get_read_type(wildcards):
+    id_map = {
+        "SE":"no",
+        "PE":"yes"
+    }
+    # read_type = list(set(samples.type.values.tolist()))
+    read_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+    if read_type in ["SE", "PE"]:
+        return id_map[read_type]
+    else:
+        sys.exit("Error fund in dex_count, columns `type` .")
+
+def stand_map(wildcards):
+    strand_map = {
+        "reverse": "reverse",
+        "forward": "ye",
+        "none": "no"
+    }
+    strand_type = samples.Strand[samples.names == wildcards.sample].values.tolist()[0]
+    if strand_type in ["none", "forward", "reverse"]:
+        return strand_map[strand_type]
+    else:
+        sys.exit("Error fund in dex_count, columns `Stand`.")
+
+rule dex_count:
+    input:
+        gtf = rules.prepare_coding_gtf.output.reduce_gtf,
+        bai_file = rules.STAR_INDEX.output.bai_file,
+        bam_file = rules.STAR.output.bam
+    output:
+        output_dir + "DEXseq/{sample}.txt"
+    params:
+        python2 = config["ep"]["python2"],
+        dexseq_count = config["ep"]["dexseq_count"],
+        pe_or_se = get_read_type,
+    shell:
+        """
+        {params.python2} {params.dexseq_count} \
+        -p {params.pe_or_se} \
+        -s {params.strand} \
+        -f bam \
+        -r pos \
+        {input.gtf} \
+        {input.bam_file} \
+        {output}
+        """

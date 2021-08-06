@@ -6,6 +6,7 @@ run_ep: True
 run_rMATs: True
 run_RSEM: True
 run_Quant: True
+run_DEXquant: True
 run_RNAmetrics: True
 run_trimming: True
 
@@ -68,6 +69,7 @@ ep:
   ExonicPartPSI: script/Exon_Part.sh
   mergePSI: script/mergePSI.R
   make_coding: script/make_coding_gtf.R
+  dexseq_count: script/dexseq_count.py
 
 ## soft
 ##---------------------------------------------------------------------------------------------

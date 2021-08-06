@@ -20,6 +20,8 @@ def multiqc_input(wildcards):
 		input.append(output_dir + "ExonPart/SUPPA/SUPPA_A3_strict.ioe")
 	if config["run_rMATs"]:
 		input.append(output_dir + "rMATs/summary.txt")
+	if config["run_DEXquant"]:
+		input.extend(expand(output_dir + "DEXseq/{sample}.txt", sample = samples.names.values.tolist())),
 
 	return input
 

@@ -15,7 +15,6 @@ def stand_map(wildcards):
         return strand_map[strand_type[0]]
     else:
         sys.exit("Error fund in rMATs, columns `Strand` must be unique for rMATs.")
-    return strand_map
 
 def get_read_type(wildcards):
     id_map = {
