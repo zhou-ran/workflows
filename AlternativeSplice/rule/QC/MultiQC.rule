@@ -23,7 +23,8 @@ def multiqc_input(wildcards):
 		input.append(output_dir + "rMATs/summary.txt")
 	if config["run_DEXquant"]:
 		input.extend(expand(output_dir + "DEXseq/{sample}.txt", sample = samples.names.values.tolist())),
-
+	if config["run_qapa"]:
+		input.extend([output_dir + "qapa/qapa_result.txt"])
 	return input
 
 ## Determine the input directories for MultiQC depending on the config file

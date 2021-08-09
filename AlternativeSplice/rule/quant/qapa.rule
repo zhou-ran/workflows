@@ -1,0 +1,50 @@
+def qapa_func(wildcards):
+	# fetch the library type from the meta information 
+	lib_type = samples.type[samples.names == wildcards.sample].values.tolist()[0]
+	if lib_type == "SE":
+		return([FASTQdir + "{sample}." + str(config["fqsuffix"]) + ".gz"])
+
+	if lib_type == "PE":
+		return([FASTQdir + "{sample}_" + str(config["fqext1"]) + "." + str(config["fqsuffix"]) + ".gz",
+				FASTQdir + "{sample}_" + str(config["fqext2"]) + "." + str(config["fqsuffix"]) + ".gz"])
+	
+	raise(ValueError("Unrecognized library type value: %s" % wildcards.sample))
+	
+
+rule qapa_quant:
+	input:
+		fqs = qapa_func
+	output:
+		output_dir + "qapa/{sample}/quant.sf"
+	params:
+		index = config["qapa"]["index"],
+		salmon = config["soft"]["salmon"],
+		outFileNamePrefix = output_dir + "qapa/{sample}",
+	run:
+		library_type = samples.type[samples.names == wildcards.sample].values[0]
+		if library_type == "SE":
+			shell("""
+			{params.salmon} quant -i {params.index} \
+			-l A -r {input.fqs} -o {params.outFileNamePrefix} -p 8
+			""")
+		elif library_type == "PE":
+			shell("""
+			{params.salmon} quant -i {params.index} \
+			-l A -1 {input.fqs[0]} -2 {input.fqs[1]} -o {params.outFileNamePrefix} -p 8
+			""")
+		else:
+			raise(ValueError("Unrecognized library type value from metadata"))
+		
+
+rule qapa_merge:
+	input:
+		expand(output_dir + "qapa/{sample}/quant.sf", sample = samples.names.values.tolist())
+	output:
+		output_dir + "qapa/qapa_result.txt"
+	params:
+		db = config["qapa"]["db"]
+	shell:
+		"""
+		qapa quant --db {params.db} \
+		{input} >  {output}
+		"""
