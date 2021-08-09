@@ -10,7 +10,7 @@ def get_read_type(wildcards):
     else:
         sys.exit("Error fund in dex_count, columns `type` .")
 
-def stand_map(wildcards):
+def strand_map(wildcards):
     strand_map = {
         "reverse": "reverse",
         "forward": "ye",
@@ -24,7 +24,7 @@ def stand_map(wildcards):
 
 rule dex_count:
     input:
-        gtf = rules.prepare_coding_gtf.output.reduce_gtf,
+        gtf = rules.prepare_gff.output.reduce_gtf,
         bai_file = rules.STAR_INDEX.output.bai_file,
         bam_file = rules.STAR.output.bam
     output:
@@ -33,6 +33,7 @@ rule dex_count:
         python2 = config["ep"]["python2"],
         dexseq_count = config["ep"]["dexseq_count"],
         pe_or_se = get_read_type,
+        strand = strand_map
     shell:
         """
         {params.python2} {params.dexseq_count} \

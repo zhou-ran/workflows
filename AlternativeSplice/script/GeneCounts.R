@@ -1,6 +1,6 @@
 library("GenomicFeatures")
 library("GenomicAlignments")
-options(mc.cores = 10)
+options(mc.cores = 4)
 
 args = commandArgs(T)
 config = args[1]
@@ -49,15 +49,15 @@ se <- lapply(names(fileNames), function(x) {
                    sep = '')
   
   bamFile <- BamFileList(bamFile,
-                         yieldSize = 2000000)
+                         yieldSize = 200000)
   
   if (fragType == 'SE') {
     se <- summarizeOverlaps(
       features = ebg,
       reads = bamFile,
       mode = "Union",
-      ignore.strand = TRUE,
-      inter.feature = ifelse(strandInfo == 'none', TRUE, FALSE),
+      ignore.strand = ifelse(strandInfo == 'none', TRUE, FALSE),
+      inter.feature = FALSE,
       singleEnd = TRUE,
       fragments = FALSE,
       # strandMode = unname(strandMode_[strandInfo]),

@@ -4,7 +4,7 @@
 #         f"--b{index+1} {group_file} " for index, group_file in enumerate(rmats_list)
 #     ]
 #     return "".join(cmd_line)
-def stand_map(wildcards):
+def strand_map(wildcards):
     strand_map = {
         "reverse": "fr-firststrand",
         "forward": "fr-secondstrand",
@@ -67,7 +67,7 @@ rule rmats:
         read_type = get_read_type,
         read_len = get_read_len,
         cores = config["RSEM"]["cores"],
-        strand = stand_map
+        strand = strand_map
 
     shell:
         """
