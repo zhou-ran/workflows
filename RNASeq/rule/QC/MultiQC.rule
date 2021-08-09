@@ -11,7 +11,7 @@ def multiqc_input(wildcards):
 		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam.bai", sample = samples.names.values.tolist()))
 		input.extend(expand(output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam", sample = samples.names.values.tolist()))
 		input.append(output_dir + "STAR/remove_share_memo/ShareLoadInfo.log")
-		output_dir + "quant/STAR_quant.Rds"
+		input.extend([output_dir + "quant/STAR_quant.Rds"])
 	if config["run_RNAmetrics"]:
 		input.extend(expand(output_dir + "Metrics/{sample}.RNA_metrics.txt", sample = samples.names.values.tolist()))
 	return input

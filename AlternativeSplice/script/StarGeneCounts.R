@@ -26,7 +26,7 @@ getGivenCol <- function(listOfDf, colId) {
 }
 
 
-fullFileName <- file.path(star_output_dir,
+fullFileName <- file.path(output_dir,
                           paste0(sampleList$names, ".ReadsPerGene.out.tab"))
 names(fullFileName) <- sampleList$names
 

@@ -107,7 +107,7 @@ rule merge_gene_counts:
 		configfile = config["metatxt"],
 		Rscript = config["soft"]["Rscript"],
 		star_script = config["star_script"],
-		prefix = output_dir
+		prefix = output_dir + "STAR/"
 	shell:
 		"""
 		{params.Rscript} {params.star_script} \
