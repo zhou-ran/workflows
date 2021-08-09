@@ -58,6 +58,8 @@ RSEM:
  index: /mnt/raid64/ref_genomes/HomSap/release101/RSEM_index/RSEM_index
  cores: 8
  extract_R: script/RSEM_extract.R
+star_script: script/StarGeneCounts.R
+quant_script: script/GeneCounts.R
 ##---------------------------------------------------------------------------------------------
 
 ## exon part

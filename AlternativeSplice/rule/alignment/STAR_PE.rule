@@ -36,7 +36,8 @@ rule STAR:
 		bam = output_dir + "STAR/{sample}.Aligned.sortedByCoord.out.bam",
 		trans_bam = output_dir + "STAR/{sample}.Aligned.toTranscriptome.out.bam",
 		log_file = output_dir + "STAR/{sample}.Log.final.out",
-		sjs = output_dir + "STAR/{sample}.SJ.out.tab"
+		sjs = output_dir + "STAR/{sample}.SJ.out.tab",
+		gene_count = output_dir + "STAR/{sample}.ReadsPerGene.out.tab"
 
 	params:
 		cores = config["STAR"]["cores"],
@@ -95,4 +96,20 @@ rule remove_share_memo:
 		--genomeDir {params.index} \
 		--outFileNamePrefix {params.outFileNamePrefix} > {output}
 
+		"""
+
+rule merge_gene_counts:
+	input:
+		expand(output_dir + "STAR/{sample}.ReadsPerGene.out.tab", sample = samples.names.values.tolist())
+	output:
+		output_dir + "quant/STAR_quant.Rds"
+	params:
+		configfile = config["metatxt"],
+		Rscript = config["soft"]["Rscript"],
+		star_script = config["star_script"],
+		prefix = output_dir
+	shell:
+		"""
+		{params.Rscript} {params.star_script} \
+		{params.configfile} {output} {params.prefix}
 		"""

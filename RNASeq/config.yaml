@@ -53,6 +53,9 @@ RSEM:
  index: /mnt/raid61/Personal_data/zhouran/reference/STAR/Mus_musculus/release93/RSEM_index/RSEM_index
  cores: 8
  extract_R: script/RSEM_extract.R
+star_script: script/StarGeneCounts.R
+quant_script: script/GeneCounts.R
+
 ##---------------------------------------------------------------------------------------------
 
 ## soft

@@ -6,8 +6,10 @@ rule calcuCounts:
 	params:
 		gtf = config["gtf"],
 		configfile = config["metatxt"],
-		Rscript = config["soft"]["Rscript"]
+		Rscript = config["soft"]["Rscript"],
+		quant_script = config["quant_script"]
 	shell:
 		"""
-		{params.Rscript} script/GeneCounts.R {params.configfile} {params.gtf} {output}
+		{params.Rscript} {params.quant_script} \
+		{params.configfile} {params.gtf} {output}
 		"""
